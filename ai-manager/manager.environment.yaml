@@ -1,0 +1,9 @@
+name: trip-planner-manager-env
+description: Sandbox for the Trip Planner project manager agent.
+config:
+  type: cloud
+  networking:
+    type: package_managers_and_custom
+    allowed_hosts:
+      - mcp.linear.app
+      - api.linear.app
