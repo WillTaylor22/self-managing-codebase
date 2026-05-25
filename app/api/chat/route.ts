@@ -1,4 +1,10 @@
-import { convertToModelMessages, streamText, tool, stepCountIs, type UIMessage } from 'ai';
+import {
+  convertToModelMessages,
+  safeValidateUIMessages,
+  streamText,
+  tool,
+  stepCountIs,
+} from 'ai';
 import { z } from 'zod';
 import { travelPlanSchema } from '@/lib/travel-plan';
 import { getSupabase } from '@/lib/supabase';
@@ -13,8 +19,40 @@ When you have enough to draft or revise the plan, call the \`updateTravelPlan\` 
 
 Style: warm, concise, specific. Recommend real neighborhoods, dishes, and venues when you can. Acknowledge uncertainty rather than inventing facts.`;
 
+// Envelope validation. `messages` is checked with safeValidateUIMessages
+// (the AI SDK's canonical UIMessage validator) immediately below — keeping
+// the zod schema deliberately loose here avoids duplicating that contract.
+const ChatBody = z.object({
+  messages: z.unknown(),
+  sessionId: z.string().optional(),
+});
+
 export async function POST(req: Request) {
-  const { messages, sessionId }: { messages: UIMessage[]; sessionId?: string } = await req.json();
+  let raw: unknown;
+  try {
+    raw = await req.json();
+  } catch {
+    return Response.json({ error: 'invalid_json' }, { status: 400 });
+  }
+
+  const envelope = ChatBody.safeParse(raw);
+  if (!envelope.success) {
+    return Response.json(
+      { error: 'invalid_body', issues: envelope.error.issues },
+      { status: 400 },
+    );
+  }
+
+  const validation = await safeValidateUIMessages({ messages: envelope.data.messages });
+  if (!validation.success) {
+    return Response.json(
+      { error: 'invalid_messages', detail: validation.error.message },
+      { status: 400 },
+    );
+  }
+
+  const messages = validation.data;
+  const { sessionId } = envelope.data;
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-4-6',
@@ -44,6 +82,3 @@ export async function POST(req: Request) {
 }
 
 export const runtime = 'nodejs';
-
-// Silence unused import warning if z tree-shakes
-void z;
