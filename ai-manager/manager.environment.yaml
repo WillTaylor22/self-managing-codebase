@@ -1,5 +1,5 @@
-name: trip-planner-manager-env
-description: Sandbox for the Trip Planner project manager agent.
+name: self-managing-codebase-env
+description: Sandbox for the self-managing-codebase project manager agent.
 config:
   type: cloud
   networking:

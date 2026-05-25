@@ -9,7 +9,7 @@ const required = (k: string): string => {
 const client = new Anthropic();
 
 const vault = await client.beta.vaults.create({
-  display_name: 'trip-planner-linear-vault',
+  display_name: 'self-managing-codebase-linear-vault',
 });
 
 await client.beta.vaults.credentials.create(vault.id, {
