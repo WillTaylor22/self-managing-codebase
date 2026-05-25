@@ -14,7 +14,7 @@ const cred = await client.beta.vaults.credentials.create(VAULT_ID, {
   display_name: 'Sentry MCP',
   auth: {
     type: 'mcp_oauth',
-    mcp_server_url: 'https://mcp.sentry.dev',
+    mcp_server_url: 'https://mcp.sentry.dev/mcp',
     access_token: required('SENTRY_MCP_ACCESS_TOKEN'),
     expires_at: required('SENTRY_MCP_EXPIRES_AT'),
     refresh: {

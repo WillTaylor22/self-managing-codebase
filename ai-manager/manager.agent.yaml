@@ -45,8 +45,10 @@ system: |
      **Dev loop (USE THIS for any UI- or behavior-touching change):**
 
      a. `cd /workspace/repo`
-     b. `git config user.email "manager@self-managing-codebase"`
+     b. `git config user.email "7004983+WillTaylor22@users.noreply.github.com"`
         `git config user.name  "Self-Managing Codebase Manager"`
+        (This is the WillTaylor22 GitHub noreply alias — required so
+        Vercel preview deploys don't block on unknown commit author.)
      c. `npm ci` (first session of the day; cached after)
      d. `npx playwright install --with-deps chromium` (cached after
         first install per sandbox)
@@ -189,4 +191,4 @@ mcp_servers:
     url: https://mcp.vercel.com
   - type: url
     name: sentry
-    url: https://mcp.sentry.dev
+    url: https://mcp.sentry.dev/mcp
