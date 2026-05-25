@@ -12,9 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
-  ?? "https://self-managing-codebase.vercel.app";
+// Resolve the site URL for metadataBase / OG url:
+//   1. NEXT_PUBLIC_SITE_URL — explicit override
+//   2. VERCEL_URL          — current deployment (preview or prod) at build time
+//   3. hard-coded prod URL — local dev / unknown environments
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
+  "https://self-managing-codebase.vercel.app";
 
 const title = "Trip Planner";
 const description =
@@ -28,13 +33,6 @@ export const metadata: Metadata = {
   },
   description,
   applicationName: title,
-  authors: [{ name: "Trip Planner" }],
-  keywords: [
-    "trip planner",
-    "travel itinerary",
-    "AI travel assistant",
-    "vacation planning",
-  ],
   openGraph: {
     type: "website",
     url: siteUrl,
@@ -43,7 +41,9 @@ export const metadata: Metadata = {
     description,
   },
   twitter: {
-    card: "summary_large_image",
+    // Use "summary" until we ship a real OG image asset; "summary_large_image"
+    // without an image often renders as nothing on X / Slack / iMessage.
+    card: "summary",
     title,
     description,
   },
