@@ -50,7 +50,6 @@ export default function Home() {
 
   const { messages, sendMessage, setMessages, status, error } = useChat({ transport });
   const [input, setInput] = useState('');
-  const [hydrated, setHydrated] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const plan = extractLatestPlan(messages);
@@ -61,18 +60,20 @@ export default function Home() {
   useEffect(() => {
     if (!storageKey) return;
     const raw = window.localStorage.getItem(storageKey);
-    if (raw) {
-      try {
-        setMessages(JSON.parse(raw));
-      } catch {}
-    }
-    setHydrated(true);
+    if (!raw) return;
+    try {
+      setMessages(JSON.parse(raw));
+    } catch {}
   }, [storageKey, setMessages]);
 
   useEffect(() => {
-    if (!hydrated || !storageKey) return;
+    // Skip empty arrays so we don't clobber stored messages on the initial
+    // render (before the hydration effect above has run). `clearConversation`
+    // removes the key directly, so an empty `messages` should never be
+    // persisted anyway.
+    if (!storageKey || messages.length === 0) return;
     window.localStorage.setItem(storageKey, JSON.stringify(messages));
-  }, [messages, hydrated, storageKey]);
+  }, [messages, storageKey]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
