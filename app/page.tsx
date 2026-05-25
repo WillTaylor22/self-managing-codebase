@@ -29,7 +29,7 @@ function extractLatestPlan(messages: ReturnType<typeof useChat>['messages']): Tr
     const msg = messages[i];
     for (let j = (msg.parts?.length ?? 0) - 1; j >= 0; j--) {
       const part = msg.parts[j] as PlanToolPart;
-      if (part.type === 'tool-updateTravelPlan' && part.input) {
+      if (part.type === 'tool-updateTravelPlan' && part.input && Array.isArray(part.input.days)) {
         return part.input;
       }
     }
@@ -48,16 +48,45 @@ export default function Home() {
     [sessionId],
   );
 
-  const { messages, sendMessage, status, error } = useChat({ transport });
+  const { messages, sendMessage, setMessages, status, error } = useChat({ transport });
   const [input, setInput] = useState('');
+  const [hydrated, setHydrated] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const plan = extractLatestPlan(messages);
+  const busy = status === 'submitted' || status === 'streaming';
+
+  const storageKey = sessionId ? `trip-messages:${sessionId}` : null;
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const raw = window.localStorage.getItem(storageKey);
+    if (raw) {
+      try {
+        setMessages(JSON.parse(raw));
+      } catch {}
+    }
+    setHydrated(true);
+  }, [storageKey, setMessages]);
+
+  useEffect(() => {
+    if (!hydrated || !storageKey) return;
+    window.localStorage.setItem(storageKey, JSON.stringify(messages));
+  }, [messages, hydrated, storageKey]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  const plan = extractLatestPlan(messages);
-  const busy = status === 'submitted' || status === 'streaming';
+  useEffect(() => {
+    if (!busy) inputRef.current?.focus();
+  }, [busy]);
+
+  function clearConversation() {
+    setMessages([]);
+    if (storageKey) window.localStorage.removeItem(storageKey);
+    inputRef.current?.focus();
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,11 +97,23 @@ export default function Home() {
 
   return (
     <div className="flex h-dvh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <header className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <h1 className="text-lg font-semibold tracking-tight">Trip Planner</h1>
-        <p className="text-sm text-zinc-500">
-          Tell me where you want to go and any constraints — dates, budget, vibe, dietary needs.
-        </p>
+      <header className="flex items-start justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight">Trip Planner</h1>
+          <p className="text-sm text-zinc-500">
+            Tell me where you want to go and any constraints — dates, budget, vibe, dietary needs.
+          </p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={clearConversation}
+            disabled={busy}
+            className="shrink-0 rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Clear
+          </button>
+        )}
       </header>
 
       <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
@@ -113,6 +154,7 @@ export default function Home() {
           <form onSubmit={submit} className="border-t border-zinc-200 p-3 dark:border-zinc-800">
             <div className="flex gap-2">
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Where to?"
@@ -189,9 +231,9 @@ function PlanView({ plan }: { plan: TravelPlan }) {
       </header>
 
       <ol className="space-y-4">
-        {plan.days.map((d) => (
+        {plan.days.map((d, i) => (
           <li
-            key={d.day}
+            key={d.day ?? i}
             className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950"
           >
             <div className="mb-2 flex items-baseline justify-between">
