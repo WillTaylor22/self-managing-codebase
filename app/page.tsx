@@ -55,6 +55,16 @@ export default function Home() {
   const plan = extractLatestPlan(messages);
   const busy = status === 'submitted' || status === 'streaming';
 
+  const MAX_INPUT_LENGTH = 4000;
+  const AMBER_THRESHOLD = MAX_INPUT_LENGTH * 0.8;
+  const overMax = input.length >= MAX_INPUT_LENGTH;
+  const counterTone =
+    overMax
+      ? 'text-red-600 dark:text-red-400'
+      : input.length > AMBER_THRESHOLD
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-zinc-500';
+
   const storageKey = sessionId ? `trip-messages:${sessionId}` : null;
 
   useEffect(() => {
@@ -91,7 +101,7 @@ export default function Home() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || busy) return;
+    if (!input.trim() || busy || overMax) return;
     sendMessage({ text: input });
     setInput('');
   }
@@ -161,14 +171,23 @@ export default function Home() {
                 placeholder="Where to?"
                 className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
                 disabled={busy}
+                aria-describedby="char-count"
               />
               <button
                 type="submit"
-                disabled={busy || !input.trim()}
+                disabled={busy || !input.trim() || overMax}
                 className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-white dark:text-zinc-900"
               >
                 Send
               </button>
+            </div>
+            <div
+              id="char-count"
+              data-testid="char-count"
+              aria-live="polite"
+              className={`mt-1.5 px-1 text-right text-xs tabular-nums ${counterTone}`}
+            >
+              {input.length} / {MAX_INPUT_LENGTH}
             </div>
           </form>
         </section>
