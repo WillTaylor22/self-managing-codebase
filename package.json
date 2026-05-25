@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "e2e": "playwright test",
     "manager": "cd ai-manager && node --env-file=.env node_modules/.bin/tsx src/run.ts",
     "manager:bootstrap": "cd ai-manager && node --env-file=.env node_modules/.bin/tsx src/bootstrap.ts",
     "manager:tick": "cd ai-manager && node --env-file=.env node_modules/.bin/tsx src/tick.ts"
@@ -14,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/react": "^3.0.193",
     "@anthropic-ai/sdk": "^0.98.0",
+    "@sentry/nextjs": "^10.53.1",
     "@supabase/supabase-js": "^2.106.1",
     "ai": "^6.0.191",
     "next": "16.2.6",
@@ -22,6 +24,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
