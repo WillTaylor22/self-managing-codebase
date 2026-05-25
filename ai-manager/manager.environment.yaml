@@ -12,12 +12,11 @@ config:
       - api.githubcopilot.com
       - github.com
       - codeload.github.com
-      - uploads.github.com
       - api.vercel.com
-      - vercel.com
       - mcp.vercel.com
       - registry.npmjs.org
-      - registry.yarnpkg.com
       - playwright.download.prss.microsoft.com
-      - playwright.azureedge.net
-      - cdn.playwright.dev
+      - mcp.sentry.dev
+      - sentry.io
+      - de.sentry.io
+      - o4511451095105536.ingest.de.sentry.io

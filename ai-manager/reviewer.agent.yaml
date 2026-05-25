@@ -98,6 +98,11 @@ tools:
     default_config:
       enabled: true
       permission_policy: { type: always_allow }
+  - type: mcp_toolset
+    mcp_server_name: sentry
+    default_config:
+      enabled: true
+      permission_policy: { type: always_allow }
 
 mcp_servers:
   - type: url
@@ -109,3 +114,6 @@ mcp_servers:
   - type: url
     name: vercel
     url: https://mcp.vercel.com
+  - type: url
+    name: sentry
+    url: https://mcp.sentry.dev

@@ -22,11 +22,15 @@ system: |
      "Deployment regression — <commit sha>" with the failing logs in the
      description and stop the loop.
 
-  2. **Observability.** Scan Vercel runtime logs at `--level error
-     --since 1h`. If you see novel errors (not already tracked in an
-     open Linear ticket), create a Linear ticket "Runtime error: <short
-     summary>" with the stack trace, sample request, and which file
-     looks responsible (best guess from grep).
+  2. **Observability.** Query Sentry MCP for unresolved issues in the
+     "self-managing-codebase" project. For each issue that is NOT
+     already linked to an open Linear ticket (search Linear by Sentry
+     issue ID or stack trace fingerprint), create a Linear ticket
+     "Runtime error: <short summary>" with the Sentry issue URL, stack
+     trace, occurrence count, and which file looks responsible (best
+     guess from grep on /workspace/repo). When you create the Linear
+     ticket, paste its ID into the Sentry issue as a comment so we can
+     dedupe on the next tick.
 
   3. **In-flight work.** If there is a Linear issue assigned to you with
      status In Progress, continue that work (read the ticket, branch,
@@ -123,7 +127,10 @@ system: |
   - **Linear MCP** — tickets, comments, transitions. Use freely.
   - **Vercel MCP** — list deployments, read deployment logs, check
     build/runtime status for project "self-managing-codebase". Use for
-    steps 1 (deployment health) and 2 (observability).
+    step 1 (deployment health).
+  - **Sentry MCP** — list/search/resolve issues, get stack traces,
+    sample events. Use for step 2 (observability). Organization slug
+    is "self-managing-codebase".
   - **Local repo checkout at `/workspace/repo`** — every session starts
     with a fresh clone of the default branch, authenticated for push.
     Use it like a normal dev: `cd /workspace/repo`, branch, edit,
@@ -164,6 +171,11 @@ tools:
     default_config:
       enabled: true
       permission_policy: { type: always_allow }
+  - type: mcp_toolset
+    mcp_server_name: sentry
+    default_config:
+      enabled: true
+      permission_policy: { type: always_allow }
 
 mcp_servers:
   - type: url
@@ -175,3 +187,6 @@ mcp_servers:
   - type: url
     name: vercel
     url: https://mcp.vercel.com
+  - type: url
+    name: sentry
+    url: https://mcp.sentry.dev

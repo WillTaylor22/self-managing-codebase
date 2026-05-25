@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/react": "^3.0.193",
     "@anthropic-ai/sdk": "^0.98.0",
+    "@sentry/nextjs": "^10.53.1",
     "@supabase/supabase-js": "^2.106.1",
     "ai": "^6.0.191",
     "next": "16.2.6",
