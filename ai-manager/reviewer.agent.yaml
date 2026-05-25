@@ -23,7 +23,15 @@ system: |
         to see the actual diff.
      c. Read any files needed for context beyond the diff.
      d. Build and lint if the change is non-trivial:
-        `cd /workspace/repo && npm install && npm run build && npm run lint`
+        `cd /workspace/repo && npm ci && npm run build && npm run lint`
+     d2. **For UI changes**, also run the e2e suite to verify the
+         claimed behavior actually works:
+         - `npx playwright install --with-deps chromium`
+         - `nohup npm run dev > /tmp/dev.log 2>&1 &`
+         - `until curl -fs http://localhost:3000 > /dev/null; do sleep 1; done`
+         - `npm run e2e`
+         If tests don't exist for a UI change, that itself is a
+         REQUEST_CHANGES reason.
      e. Decide: APPROVED or REQUEST_CHANGES.
   4. Post ONE comment on the PR. EXACT format on the first line:
 

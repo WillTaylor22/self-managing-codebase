@@ -17,3 +17,6 @@ config:
       - vercel.com
       - registry.npmjs.org
       - registry.yarnpkg.com
+      - playwright.download.prss.microsoft.com
+      - playwright.azureedge.net
+      - cdn.playwright.dev
