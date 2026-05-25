@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/manager-tick",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

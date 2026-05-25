@@ -7,3 +7,12 @@ config:
     allowed_hosts:
       - mcp.linear.app
       - api.linear.app
+      - self-managing-codebase.vercel.app
+      - api.github.com
+      - github.com
+      - codeload.github.com
+      - uploads.github.com
+      - api.vercel.com
+      - vercel.com
+      - registry.npmjs.org
+      - registry.yarnpkg.com

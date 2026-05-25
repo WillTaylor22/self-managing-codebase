@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "manager": "cd ai-manager && node --env-file=.env node_modules/.bin/tsx src/run.ts",
+    "manager:bootstrap": "cd ai-manager && node --env-file=.env node_modules/.bin/tsx src/bootstrap.ts",
+    "manager:tick": "cd ai-manager && node --env-file=.env node_modules/.bin/tsx src/tick.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.193",
+    "@anthropic-ai/sdk": "^0.98.0",
     "@supabase/supabase-js": "^2.106.1",
     "ai": "^6.0.191",
     "next": "16.2.6",

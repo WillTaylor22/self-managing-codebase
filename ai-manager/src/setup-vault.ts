@@ -23,7 +23,10 @@ await client.beta.vaults.credentials.create(vault.id, {
       refresh_token: required('LINEAR_MCP_REFRESH_TOKEN'),
       client_id: required('LINEAR_MCP_CLIENT_ID'),
       token_endpoint: 'https://api.linear.app/oauth/token',
-      token_endpoint_auth: { type: 'none' },
+      token_endpoint_auth: {
+        type: 'client_secret_post',
+        client_secret: required('LINEAR_MCP_CLIENT_SECRET'),
+      },
     },
   },
 });

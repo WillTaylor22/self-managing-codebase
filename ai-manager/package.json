@@ -4,11 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "bootstrap": "tsx src/bootstrap.ts",
+    "linear:oauth": "tsx src/linear-oauth.ts",
     "setup:vault": "tsx src/setup-vault.ts",
-    "run": "tsx src/run.ts"
+    "run": "tsx src/run.ts",
+    "tick": "tsx src/tick.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.88.0"
+    "@anthropic-ai/sdk": "^0.88.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
