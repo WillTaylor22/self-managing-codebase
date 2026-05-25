@@ -3,6 +3,10 @@
     {
       "path": "/api/manager-tick",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/reviewer-tick",
+      "schedule": "15,45 * * * *"
     }
   ]
 }

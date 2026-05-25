@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "bootstrap": "tsx src/bootstrap.ts",
+    "bootstrap:reviewer": "tsx src/bootstrap.ts reviewer",
     "linear:oauth": "tsx src/linear-oauth.ts",
     "setup:vault": "tsx src/setup-vault.ts",
     "add-github-credential": "tsx src/add-github-credential.ts",

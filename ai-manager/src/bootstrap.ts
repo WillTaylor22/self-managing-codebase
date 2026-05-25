@@ -28,7 +28,10 @@ type EnvYaml = {
   };
 };
 
-const agentDoc = parseYaml(readFileSync(resolve(root, 'manager.agent.yaml'), 'utf8')) as AgentYaml;
+const role = process.argv[2] ?? 'manager';
+const agentIdEnvVar = role === 'manager' ? 'AGENT_ID' : `${role.toUpperCase()}_AGENT_ID`;
+
+const agentDoc = parseYaml(readFileSync(resolve(root, `${role}.agent.yaml`), 'utf8')) as AgentYaml;
 const envDoc = parseYaml(readFileSync(resolve(root, 'manager.environment.yaml'), 'utf8')) as EnvYaml;
 
 const client = new Anthropic();
@@ -61,7 +64,7 @@ const environment = existingEnvId
     })();
 console.log(`  ENV_ID=${environment.id}`);
 
-const existingAgentId = process.env.AGENT_ID;
+const existingAgentId = process.env[agentIdEnvVar];
 const agent = existingAgentId
   ? await (async () => {
       console.log(`Updating agent ${existingAgentId}...`);
@@ -91,6 +94,6 @@ console.log(`  AGENT_ID=${agent.id}`);
 
 if (!existingEnvId || !existingAgentId) {
   console.log('\nAdd these to ai-manager/.env:');
-  if (!existingAgentId) console.log(`AGENT_ID=${agent.id}`);
+  if (!existingAgentId) console.log(`${agentIdEnvVar}=${agent.id}`);
   if (!existingEnvId) console.log(`ENV_ID=${environment.id}`);
 }
