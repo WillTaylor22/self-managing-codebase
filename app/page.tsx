@@ -24,6 +24,9 @@ type PlanToolPart = {
   state?: string;
 };
 
+const MAX_INPUT_CHARS = 4000;
+const WARN_INPUT_CHARS = Math.floor(MAX_INPUT_CHARS * 0.8); // 3200
+
 function extractLatestPlan(messages: ReturnType<typeof useChat>['messages']): TravelPlan | null {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
@@ -89,9 +92,24 @@ export default function Home() {
     inputRef.current?.focus();
   }
 
+  const charCount = input.length;
+  // Boundaries match ENG-14 spec exactly:
+  //   normal: count <= WARN_INPUT_CHARS  (≤ 80% of max)
+  //   warn:   WARN_INPUT_CHARS < count < MAX_INPUT_CHARS
+  //   over:   count >= MAX_INPUT_CHARS   (Send is disabled in this state)
+  const overLimit = charCount >= MAX_INPUT_CHARS;
+  const nearLimit = charCount > WARN_INPUT_CHARS && !overLimit;
+  const countState: 'normal' | 'warn' | 'over' = overLimit ? 'over' : nearLimit ? 'warn' : 'normal';
+  const countColor =
+    countState === 'over'
+      ? 'text-red-600 dark:text-red-400'
+      : countState === 'warn'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-zinc-500';
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || busy) return;
+    if (!input.trim() || busy || overLimit) return;
     sendMessage({ text: input });
     setInput('');
   }
@@ -161,14 +179,24 @@ export default function Home() {
                 placeholder="Where to?"
                 className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
                 disabled={busy}
+                aria-describedby="char-count"
               />
               <button
                 type="submit"
-                disabled={busy || !input.trim()}
+                disabled={busy || !input.trim() || overLimit}
                 className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-white dark:text-zinc-900"
               >
                 Send
               </button>
+            </div>
+            <div
+              id="char-count"
+              data-testid="char-count"
+              data-state={countState}
+              aria-live="polite"
+              className={`mt-1.5 px-4 text-[11px] tabular-nums ${countColor}`}
+            >
+              {charCount} / {MAX_INPUT_CHARS}
             </div>
           </form>
         </section>
