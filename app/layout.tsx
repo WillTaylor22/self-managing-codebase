@@ -13,12 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 // Resolve the site URL for metadataBase / OG url:
-//   1. NEXT_PUBLIC_SITE_URL — explicit override
-//   2. VERCEL_URL          — current deployment (preview or prod) at build time
-//   3. hard-coded prod URL — local dev / unknown environments
+//   1. NEXT_PUBLIC_SITE_URL              — explicit override
+//   2. prod: VERCEL_PROJECT_PRODUCTION_URL — canonical alias, stable across deploys
+//   3. preview/dev: VERCEL_URL            — per-deploy URL so preview shares work
+//   4. hard-coded prod URL                — local dev / unknown environments
+//
+// Using VERCEL_URL for prod fragments social signals because every deploy
+// publishes a unique og:url. VERCEL_PROJECT_PRODUCTION_URL is the canonical
+// production alias (e.g. "self-managing-codebase.vercel.app").
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
+  (process.env.VERCEL_ENV === "production"
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "self-managing-codebase.vercel.app"}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : undefined) ??
   "https://self-managing-codebase.vercel.app";
 
 const title = "Trip Planner";
