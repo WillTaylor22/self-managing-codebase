@@ -9,6 +9,7 @@ config:
       - api.linear.app
       - self-managing-codebase.vercel.app
       - api.github.com
+      - api.githubcopilot.com
       - github.com
       - codeload.github.com
       - uploads.github.com

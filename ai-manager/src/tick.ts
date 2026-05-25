@@ -9,6 +9,7 @@ const required = (k: string): string => {
 const AGENT_ID = required('AGENT_ID');
 const ENV_ID = required('ENV_ID');
 const VAULT_ID = required('VAULT_ID');
+const GITHUB_PAT = required('GITHUB_PAT');
 
 const goal =
   process.argv.slice(2).join(' ').trim() ||
@@ -20,6 +21,14 @@ const session = await client.beta.sessions.create({
   agent: AGENT_ID,
   environment_id: ENV_ID,
   vault_ids: [VAULT_ID],
+  resources: [
+    {
+      type: 'github_repository',
+      url: 'https://github.com/WillTaylor22/self-managing-codebase',
+      authorization_token: GITHUB_PAT,
+      mount_path: '/workspace/repo',
+    },
+  ],
   title: `tick ${new Date().toISOString()}`,
 });
 

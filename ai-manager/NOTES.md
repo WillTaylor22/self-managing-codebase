@@ -14,15 +14,13 @@
 
 ## What's NOT wired up — needs your input
 
-### 1. GitHub access for the agent
-The agent prompt tells it to use `gh` with `GH_TOKEN`. That token does not exist yet.
+### 1. GitHub access for the agent ✅ DONE
+GitHub MCP server (`https://api.githubcopilot.com/mcp/`) is wired up. A fine-grained PAT was added to the vault as a `static_bearer` credential (`vcrd_01UURu4AEsXTv1kQfWmdBuTX`). The agent uses GitHub via MCP tools — no `gh` CLI / env var.
 
-Option A (simplest): create a fine-grained PAT scoped to `workflow-design/self-managing-codebase` with `contents: write`, `pull_requests: write`, `issues: write`, `metadata: read`, `actions: read`. Add as a **static_bearer** credential to the existing vault, name it `GH_TOKEN`. Adapt `setup-vault.ts` (copy the existing `vaults.credentials.create` call but with `type: 'static_bearer'`).
-
-Option B (cleaner long-term): create a GitHub App for the repo, install it, use its installation token. More setup.
+To rotate: get a new PAT at https://github.com/settings/personal-access-tokens/new (scoped to `WillTaylor22/self-managing-codebase` with contents/PRs/issues r/w + actions read), set `GITHUB_PAT` in `.env`, then re-run `npm run add-github-credential` (you'll want to delete the old credential first via the SDK).
 
 ### 2. Vercel access for the agent
-Same pattern as GitHub. Create a token at https://vercel.com/account/tokens, add to the vault as `VERCEL_TOKEN`.
+Vercel has no first-party MCP server (yet — there's a "Vercel MCP" project but it's not GA). For now the agent uses the live app via `curl` (allowed_hosts already covers `api.vercel.com`). If you want deployment/log control, create a token at https://vercel.com/account/tokens and decide whether to: (a) shell out to `vercel` CLI from sandbox bash with the token via a session-injected env, or (b) curl `api.vercel.com` directly with `Authorization: Bearer <token>`. Option (b) is simpler — write a small wrapper script the agent invokes.
 
 ### 3. Vercel env vars for the cron
 The cron route needs to know who to invoke. Add these in Vercel project settings → Environment Variables (production):

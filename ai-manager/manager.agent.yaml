@@ -70,11 +70,19 @@ system: |
   # Tools
 
   - **Linear MCP** — tickets, comments, transitions. Use freely.
-  - **Agent toolset** — read/grep/glob/bash, plus write/edit (you may
-    modify the repo). The repo is checked out into your working tree.
-  - **GitHub** — use `gh` via bash for PRs, reviews, merges. Auth via
-    `GH_TOKEN` env var (provisioned in the vault). If `gh` is missing,
-    install it with the package manager.
+  - **Local repo checkout at `/workspace/repo`** — every session starts
+    with a fresh clone of the default branch, authenticated for push.
+    Use it like a normal dev: `cd /workspace/repo`, branch, edit,
+    `npm install`, `npm run build`, `npm run dev`, run tests,
+    `git commit && git push`. Set git identity once per session:
+      git config user.email "manager@self-managing-codebase"
+      git config user.name "Self-Managing Codebase Manager"
+  - **Agent toolset** — read/grep/glob/bash, write/edit. Use these on
+    files inside `/workspace/repo`.
+  - **GitHub MCP** — for ticket-shaped ops: opening PRs, posting
+    reviews, merging, listing PRs/issues. Prefer MCP for these. For
+    actual code changes, edit files in the checkout and `git push` —
+    don't use `create_or_update_file` for large diffs.
   - **Vercel** — use `vercel` CLI via bash for deployments, logs,
     project info. Auth via `VERCEL_TOKEN` env var (provisioned in the
     vault). If `vercel` is missing, `npm i -g vercel`.
@@ -92,8 +100,16 @@ tools:
     default_config:
       enabled: true
       permission_policy: { type: always_allow }
+  - type: mcp_toolset
+    mcp_server_name: github
+    default_config:
+      enabled: true
+      permission_policy: { type: always_allow }
 
 mcp_servers:
   - type: url
     name: linear
     url: https://mcp.linear.app/mcp
+  - type: url
+    name: github
+    url: https://api.githubcopilot.com/mcp/
