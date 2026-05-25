@@ -121,6 +121,9 @@ system: |
   # Tools
 
   - **Linear MCP** — tickets, comments, transitions. Use freely.
+  - **Vercel MCP** — list deployments, read deployment logs, check
+    build/runtime status for project "self-managing-codebase". Use for
+    steps 1 (deployment health) and 2 (observability).
   - **Local repo checkout at `/workspace/repo`** — every session starts
     with a fresh clone of the default branch, authenticated for push.
     Use it like a normal dev: `cd /workspace/repo`, branch, edit,
@@ -156,6 +159,11 @@ tools:
     default_config:
       enabled: true
       permission_policy: { type: always_allow }
+  - type: mcp_toolset
+    mcp_server_name: vercel
+    default_config:
+      enabled: true
+      permission_policy: { type: always_allow }
 
 mcp_servers:
   - type: url
@@ -164,3 +172,6 @@ mcp_servers:
   - type: url
     name: github
     url: https://api.githubcopilot.com/mcp/
+  - type: url
+    name: vercel
+    url: https://mcp.vercel.com

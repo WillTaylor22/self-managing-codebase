@@ -15,6 +15,7 @@ config:
       - uploads.github.com
       - api.vercel.com
       - vercel.com
+      - mcp.vercel.com
       - registry.npmjs.org
       - registry.yarnpkg.com
       - playwright.download.prss.microsoft.com
