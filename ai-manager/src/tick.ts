@@ -11,9 +11,7 @@ const ENV_ID = required('ENV_ID');
 const VAULT_ID = required('VAULT_ID');
 const GITHUB_PAT = required('GITHUB_PAT');
 
-const goal =
-  process.argv.slice(2).join(' ').trim() ||
-  'Wake up. Run the operational loop in your system prompt. Stop when there is nothing left.';
+const customGoal = process.argv.slice(2).join(' ').trim();
 
 const client = new Anthropic();
 
@@ -33,6 +31,10 @@ const session = await client.beta.sessions.create({
 });
 
 console.log(`Session: ${session.id}`);
+
+const goal =
+  customGoal ||
+  `Wake up. Your session id is ${session.id} — when you open a PR, include "<!-- session-id: ${session.id} -->" as the last line of the PR body so future webhooks can resume this session. Run the operational loop in your system prompt. Stop when there is nothing left.`;
 
 const stream = await client.beta.sessions.events.stream(session.id);
 await client.beta.sessions.events.send(session.id, {
