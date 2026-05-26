@@ -16,3 +16,4 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 ## Conventions
 - [conventions/pr-session-id-marker](conventions/pr-session-id-marker.md) — PR body MUST end with `<!-- session-id: sesn_... -->` (or legacy `sthr_...`) so webhooks can resume
 - [conventions/agent-review-marker](conventions/agent-review-marker.md) — Reviewer's verdict goes on the first line as `AGENT_REVIEW: APPROVED|REQUEST_CHANGES|ESCALATE — <rationale>`
+- [conventions/check-open-pr-before-ticket-pickup](conventions/check-open-pr-before-ticket-pickup.md) — Before branching for a Linear ticket, grep open PRs for the ticket ID; abort if one already exists (PR #15 vs #16 ENG-26 race)
