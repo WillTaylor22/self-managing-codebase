@@ -1,24 +1,54 @@
 # Self-managing codebase
 
-A production-ready app uses observability systems to allow developers monitor the app's state and correct any issues raised. These tasks include diagnosing and fixing errors, fixing user-reported bugs, improving slow performance, roll-backs after a new release, security patches and library upgrades. These maintence tasks distract to the team and can require round-the-clock "on-call" rotations of developers in the team to take ressponsibility.
+A demo showcasing an app maintained by a long-running agent.
 
-To reduce the burden of maintenence tasks, this codebase provides a demo of a cloud-based long-running "manager" agent which monitors the app, create tasks, implements and deploy fixes. A second "reviewer" agent reviews and comments on changes before they are deployed. Large changes and pull requests that have receive multiple rounds of review can be escalated to a human for final approval. In practice a team might approve all of the changes created while they get comfortable with the agent's decision making.
+## Motivation
 
-## Implementation
+Production apps need constant care: errors and stack traces to triage, slow endpoints to investigate, libraries to upgrade, regressions to roll back. That work eats developer time and can require on-call rotations.
 
-The agent using an Anthropic managed agent to run Claude Code in a serverless, file-system backed function as needed. A 1 hour cron job triggers the agent to monitor observability signals, create tasks, and pick up any available tasks. Tasks are managed in a Linear board via MCP, providing a control plane.
+This repo is demo that showcases what is possible in pushing those tasks onto a long-horizon agent.
 
-To deploy new code without human intervention the agent runs the app locally to test work in progress, and can monitor and manage the deployment pipeline in Vercel. The agent can run the app in the browser locally using Playwrite and for any front-end changes will add screenshots and a video of any changes to the pull request, which improves reliability.
+## What's in the repo?
 
-The repository is structured as a standard NextJS app for the core product (a travel planner AI), with the managing agent in `./ai-manager`. Start a REPL session into a new agent using `npm run manager`.
+- **The demo product.** The demo product is a Next.js travel-planner app.
+- **The managing agent.** A cloud-hosted Anthropic Managed Agent runs every 30 minutes (and on GitHub webhooks). It monitors Vercel + Sentry, files Linear tickets for new issues, picks up tickets, writes code, runs Playwright to view it's own work in a local dev server, and opens PRs.
+- **The review agent.** A separate reviewer agent reads each PR cold, builds, runs tests, posts approve / request-changes / escalate. Three rounds of changes → escalates to a human.
+- **The retro agent.** The agent system is self-learning. Each session can append to `.claude/memory/`. A retro agent runs daily, summarises 24h of activity in a Linear project update, and proposes memory edits as a PR.
 
-The agent posts a daily project update to Linear what's happened and flagging any actions needing human investigation..
+## How it works
 
-## Limitations and extensions
+**Two cron-driven loops + webhook-driven resumes**
 
-- The agent cannot add new infrastructure or pay for services beyond what is available over MCP. It cannot manage or set-up environment variables. This means you cannot ask it, or any other agent, to bootstrap itself onto a new app.
-- The review process is slow. For robustness the manager and reviewer agent both run on a cron job, which means there can be a delay between the manager finishing and the reviewer starting. Ideally this would use an event-based system.
-- No attempt to set up product analytics, user- managementfeedback, cross-browser issue support via BrowserStack MCP, however these are relatively trivial to add to the agent once it is running.
-- Non-portable - setting up the agent requires a fair amount of human infrastructure work
+1. **Manager** (`/api/manager-tick`, every 30 min). Reads memory, checks Vercel + Sentry, files tickets, picks up one Linear ticket, runs the dev loop locally in a sandbox (install, dev server, Playwright, build, lint), opens a PR.
+2. **Reviewer** (`/api/reviewer-tick`, every 30 min). Reads each open PR cold, builds, runs e2e, posts `AGENT_REVIEW: APPROVED | REQUEST_CHANGES | ESCALATE`.
+3. **Webhooks** (`/api/github-webhook`). PR opens → reviewer fires immediately. Reviewer approval → manager session resumes (full context) and squash-merges.
 
-My hope is that this inspires you to set up your own ai-manager for your repos. If you
+**Daily retro** (`/api/retro-tick`, 07:00 UTC). Reads 24h of activity, posts a Linear project update with a health field, and proposes `.claude/memory/` edits as a PR.
+
+**Stack**
+
+- **Anthropic Managed Agents** — three agents (manager, reviewer, retro), all running in cloud sandboxes with a mounted clone of this repo.
+- **Linear MCP** — Store and control plane for tasks; also the location where the agent provides project updates.
+- **GitHub MCP** — PRs, reviews, files.
+- **Vercel MCP** — deployments, logs.
+- **Sentry MCP** — runtime errors.
+- **Vercel** — hosting + cron + webhooks for the orchestration routes.
+- **Playwright** — e2e tests inside the sandbox.
+
+## Quick start
+
+```bash
+npm run manager           # interactive REPL into a manager session
+npm run manager:tick      # one-shot operational loop, prints transcript
+npm run manager:bootstrap # apply agent YAML changes to the live agent
+```
+
+## Known limitations
+
+- **Bring your own infrastructure.** The agent cannot create infrastructure, set env vars, register OAuth apps, or pay for services. Bootstrapping is human-only.
+- **Further observability.** Product analytics, metrics and so on are trivial to add once the agent is running, and thus not done here.
+- **Single-agent throughput.** WIP limit of 1 — the manager won't pick up a second ticket while another is in flight. Keeps things simple, caps throughput.
+
+## Contact
+
+I hope this inspires you to set up your own. If you would like to swap notes, I can be reached at [willtay.com](https://willtay.com/).

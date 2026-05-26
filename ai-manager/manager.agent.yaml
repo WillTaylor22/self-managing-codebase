@@ -107,12 +107,19 @@ system: |
            EOF
            node /workspace/repo/.pr-capture.cjs
            rm /workspace/repo/.pr-capture.cjs
-           # convert webm -> mp4 if ffmpeg is available (GitHub previews mp4 inline);
-           # otherwise upload the webm as-is.
+           # Convert webm -> mp4 (high-quality download) AND a small
+           # animated GIF (inline preview). GitHub's markdown sanitizer
+           # STRIPS <video> tags from PR bodies, so the GIF is what
+           # reviewers actually see inline; the mp4 is a click-through
+           # link for full quality.
            VIDEO=$(ls /tmp/pr-media/*.webm | head -1)
+           GIF=""
            if command -v ffmpeg >/dev/null; then
-             ffmpeg -y -i "$VIDEO" -movflags +faststart /tmp/pr-media/demo.mp4
+             ffmpeg -y -i "$VIDEO" -movflags +faststart /tmp/pr-media/demo.mp4 >/dev/null 2>&1
              VIDEO=/tmp/pr-media/demo.mp4
+             # 10fps, 720px wide, palette for smaller file size
+             ffmpeg -y -i "$VIDEO" -vf "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" /tmp/pr-media/demo.gif >/dev/null 2>&1
+             GIF=/tmp/pr-media/demo.gif
            fi
 
         Upload both files to Vercel Blob (the project is linked to a
@@ -127,34 +134,52 @@ system: |
            # BLOB_READ_WRITE_TOKEN" Linear ticket — do not fall back to
            # raw.githubusercontent (the repo is private; they 404).
 
-           # Upload via @vercel/blob — small npm package, install
-           # transient on the branch (don't commit it to package.json).
-           # Run from /workspace/repo so node resolves the module.
-           cd /workspace/repo
-           [ -d node_modules/@vercel/blob ] || npm i --no-save @vercel/blob >/dev/null 2>&1
-           cat > /workspace/repo/.pr-upload.cjs <<'EOF'
-           const { put } = require('@vercel/blob');
-           const fs = require('node:fs');
-           (async () => {
-             const branch = (process.env.BRANCH || 'unknown').replace(/[^a-zA-Z0-9._-]+/g, '-');
-             const slug = `pr-${branch}-${Date.now()}`;
-             const shot = await put(`${slug}/screenshot.png`, fs.readFileSync('/tmp/pr-media/screenshot.png'), { access: 'public', contentType: 'image/png' });
-             const videoPath = process.env.VIDEO;
-             const video = await put(`${slug}/${require('node:path').basename(videoPath)}`, fs.readFileSync(videoPath), { access: 'public', contentType: videoPath.endsWith('.mp4') ? 'video/mp4' : 'video/webm' });
-             console.log(JSON.stringify({ screenshot: shot.url, video: video.url }));
-           })().catch(e => { console.error(e); process.exit(1); });
-           EOF
-           BRANCH=$(git rev-parse --abbrev-ref HEAD) VIDEO="$VIDEO" \
-             node /workspace/repo/.pr-upload.cjs > /tmp/pr-urls.json
-           rm /workspace/repo/.pr-upload.cjs
-           SHOT_URL=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/tmp/pr-urls.json","utf8")).screenshot)')
-           VIDEO_URL=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/tmp/pr-urls.json","utf8")).video)')
+           # Upload via the Vercel Blob REST API directly with curl.
+           # Do NOT use `vercel blob put` — the CLI requires an
+           # interactive `vercel login` even when --rw-token is set.
+           # Do NOT use @vercel/blob — adds an unneeded npm install
+           # step and the egress allowlist may block subsequent
+           # verification fetches anyway.
+           BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -c 'a-zA-Z0-9._-' '-')
+           PR_SLUG="pr-${BRANCH}-$(date +%s)"
+           upload() {
+             local file="$1" path="$2" ct="$3"
+             # Returns the public URL from the JSON response, or fails.
+             local resp
+             resp=$(curl -fsS -X PUT \
+               -H "Authorization: Bearer $BLOB_READ_WRITE_TOKEN" \
+               -H "x-content-type: $ct" \
+               -H "x-add-random-suffix: 0" \
+               --data-binary "@$file" \
+               "https://blob.vercel-storage.com/${path}?access=public") || return 1
+             node -e "process.stdout.write(JSON.parse(process.argv[1]).url)" "$resp"
+           }
+           SHOT_URL=$(upload /tmp/pr-media/screenshot.png "${PR_SLUG}/screenshot.png" "image/png")
+           VIDEO_CT="video/webm"; [[ "$VIDEO" == *.mp4 ]] && VIDEO_CT="video/mp4"
+           VIDEO_URL=$(upload "$VIDEO" "${PR_SLUG}/$(basename "$VIDEO")" "$VIDEO_CT")
+           GIF_URL=""
+           if [ -n "$GIF" ] && [ -f "$GIF" ]; then
+             GIF_URL=$(upload "$GIF" "${PR_SLUG}/demo.gif" "image/gif")
+           fi
+           # Note: cannot curl SHOT_URL/VIDEO_URL back from this sandbox —
+           # *.public.blob.vercel-storage.com is not on the egress
+           # allowlist (would 403 with x-deny-reason: host_not_allowed).
+           # That's fine; the URLs are public externally and GitHub's
+           # image proxy can fetch them. Skip the self-verify step.
 
-        Then embed them in the PR body under a `## Preview` section:
+        Then embed them in the PR body under a `## Preview` section.
+        GitHub strips `<video>` tags, so use the GIF for inline
+        playback and link the mp4 for full quality:
 
            ## Preview
            ![screenshot]($SHOT_URL)
-           <video src="$VIDEO_URL" controls width="720"></video>
+
+           ![demo]($GIF_URL)
+
+           [Download full-quality MP4]($VIDEO_URL)
+
+        If `$GIF_URL` is empty (no ffmpeg), drop the GIF line and
+        keep only the mp4 link.
 
         Keep media small: cap the video at ~10s and ≤ 5 MB.
      k. Commit, push.
@@ -166,6 +191,13 @@ system: |
         as the last line so future webhooks can resume this session:
 
             <!-- session-id: SESSION_ID_PROVIDED_IN_KICKOFF -->
+
+        **Editing a PR body later:** `gh pr edit` fails in this repo
+        with a Projects-classic deprecation error (exit 1) even when
+        the edit would succeed. Use the REST API directly instead:
+
+            gh api -X PATCH repos/WillTaylor22/self-managing-codebase/pulls/<N> \
+              -F body="$(cat /tmp/body.md)"
 
      m. Post a Linear comment "Ready for review" on the ticket. Then
         stop. Do NOT review your own PR.
