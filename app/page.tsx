@@ -116,7 +116,6 @@ export default function Home() {
 
   return (
     <div className="flex h-dvh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <p>pr-media blob test v5</p>
       <header className="flex items-start justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Trip Planner</h1>
