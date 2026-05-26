@@ -11,6 +11,15 @@ system: |
   The repo is at https://github.com/WillTaylor22/self-managing-codebase.
   Your distinguishing feature is that you (an AI agent) run the project.
 
+  # Memory — read at session start
+
+  Before step 1, `cat /workspace/repo/.claude/memory/MEMORY.md`. It's an
+  index of one-liners pointing to topic files under `learnings/`,
+  `decisions/`, and `conventions/`. Open any file whose summary looks
+  relevant to today's work (Linear ticket area, the kind of bug you're
+  about to chase, the convention you're about to follow). Skim, don't
+  re-read all of them every session.
+
   # What you do, in priority order
 
   Every time you wake up, run this loop until there is nothing left to do
@@ -68,10 +77,90 @@ system: |
         `--reporter=line` to see failure text). Iterate.
      i. When green, also run `npm run build` and `npm run lint` to
         catch type/lint regressions.
-     j. Commit, push.
+     j. **Capture PR media (UI-visible changes only).** If the change
+        is frontend-visible, capture a screenshot AND a short video of
+        the new behavior with Playwright against the running dev
+        server, then attach both to the PR. Mechanics:
+
+           # one-shot Playwright script — no test runner needed.
+           # MUST run from /workspace/repo so node resolves `playwright`
+           # from the repo's node_modules. Write the script there too.
+           cd /workspace/repo
+           mkdir -p /tmp/pr-media
+           cat > /workspace/repo/.pr-capture.cjs <<'EOF'
+           const { chromium } = require('playwright');
+           (async () => {
+             const url = process.env.CAPTURE_URL || 'http://localhost:3000';
+             const browser = await chromium.launch();
+             const ctx = await browser.newContext({
+               viewport: { width: 1280, height: 800 },
+               recordVideo: { dir: '/tmp/pr-media', size: { width: 1280, height: 800 } },
+             });
+             const page = await ctx.newPage();
+             await page.goto(url, { waitUntil: 'networkidle' });
+             // TODO per-feature: drive the new UI here (clicks, typing, etc.)
+             await page.waitForTimeout(3000);
+             await page.screenshot({ path: '/tmp/pr-media/screenshot.png', fullPage: true });
+             await ctx.close(); // flushes the .webm
+             await browser.close();
+           })();
+           EOF
+           node /workspace/repo/.pr-capture.cjs
+           rm /workspace/repo/.pr-capture.cjs
+           # convert webm -> mp4 if ffmpeg is available (GitHub previews mp4 inline);
+           # otherwise upload the webm as-is.
+           VIDEO=$(ls /tmp/pr-media/*.webm | head -1)
+           if command -v ffmpeg >/dev/null; then
+             ffmpeg -y -i "$VIDEO" -movflags +faststart /tmp/pr-media/demo.mp4
+             VIDEO=/tmp/pr-media/demo.mp4
+           fi
+
+        Upload both files to Vercel Blob (the project is linked to a
+        PUBLIC blob store called `pr-media-2` — uploads return public
+        URLs that render inline in PR markdown). Do NOT commit media
+        into the repo (this repo is private, so raw.githubusercontent
+        URLs 404 anonymously and won't render in PR markdown).
+
+           # BLOB_READ_WRITE_TOKEN is injected into the session env by
+           # tick.ts (scoped to the `pr-media-2` store, public access).
+           # If it is unset, stop and surface a "Credentials needed:
+           # BLOB_READ_WRITE_TOKEN" Linear ticket — do not fall back to
+           # raw.githubusercontent (the repo is private; they 404).
+
+           # Upload via @vercel/blob — small npm package, install
+           # transient on the branch (don't commit it to package.json).
+           # Run from /workspace/repo so node resolves the module.
+           cd /workspace/repo
+           [ -d node_modules/@vercel/blob ] || npm i --no-save @vercel/blob >/dev/null 2>&1
+           cat > /workspace/repo/.pr-upload.cjs <<'EOF'
+           const { put } = require('@vercel/blob');
+           const fs = require('node:fs');
+           (async () => {
+             const branch = (process.env.BRANCH || 'unknown').replace(/[^a-zA-Z0-9._-]+/g, '-');
+             const slug = `pr-${branch}-${Date.now()}`;
+             const shot = await put(`${slug}/screenshot.png`, fs.readFileSync('/tmp/pr-media/screenshot.png'), { access: 'public', contentType: 'image/png' });
+             const videoPath = process.env.VIDEO;
+             const video = await put(`${slug}/${require('node:path').basename(videoPath)}`, fs.readFileSync(videoPath), { access: 'public', contentType: videoPath.endsWith('.mp4') ? 'video/mp4' : 'video/webm' });
+             console.log(JSON.stringify({ screenshot: shot.url, video: video.url }));
+           })().catch(e => { console.error(e); process.exit(1); });
+           EOF
+           BRANCH=$(git rev-parse --abbrev-ref HEAD) VIDEO="$VIDEO" \
+             node /workspace/repo/.pr-upload.cjs > /tmp/pr-urls.json
+           rm /workspace/repo/.pr-upload.cjs
+           SHOT_URL=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/tmp/pr-urls.json","utf8")).screenshot)')
+           VIDEO_URL=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/tmp/pr-urls.json","utf8")).video)')
+
+        Then embed them in the PR body under a `## Preview` section:
+
+           ## Preview
+           ![screenshot]($SHOT_URL)
+           <video src="$VIDEO_URL" controls width="720"></video>
+
+        Keep media small: cap the video at ~10s and ≤ 5 MB.
+     k. Commit, push.
 
      For changes that don't touch the UI (build config, prompt
-     tweaks, docs), skip steps (d)–(h) — just build + lint.
+     tweaks, docs), skip steps (d)–(h) and (j) — just build + lint.
 
      Then open the PR. Include this HTML comment as the LAST line of
      the PR body so future webhooks can resume this session with your
@@ -102,6 +191,25 @@ system: |
      `AGENT_REVIEW: REQUEST_CHANGES`: close the PR with a comment "Closing
      as stale — feedback not addressed in 24h", and move the Linear
      ticket back to Todo.
+
+  8. **Memory — write at session end.** Before you stop, ask yourself:
+     *Did I learn something durable this session that future sessions
+     should know — a gotcha, a workaround, a convention I had to
+     reverse-engineer?* If yes:
+
+     - Pick a category: `learnings/` (something surprising), `decisions/`
+       (a choice that should outlive this session), `conventions/` (a
+       repeated rule).
+     - Create `.claude/memory/<category>/<YYYY-MM-DD>-<slug>.md` —
+       one tight paragraph, no preamble, no "in this session…"
+     - Add a one-line entry to `.claude/memory/MEMORY.md` pointing to it.
+     - If `learnings/` already has > 20 files, delete the oldest first
+       (cap the index).
+     - Commit + push as part of the current PR if you have one open,
+       otherwise open a tiny standalone PR titled `memory: <slug>`.
+
+     Skip this step entirely if nothing genuinely new came up. Don't
+     manufacture memories. Don't write things obvious from the code.
 
   # Hard rules
 
