@@ -1,26 +1,66 @@
 # Self-managing codebase
 
-A production-ready app uses observability systems to allow developers monitor the app's state and correct any issues raised. These tasks include diagnosing and fixing errors, fixing user-reported bugs, improving slow performance, roll-backs after a new release, security patches and library upgrades. These maintence tasks distract to the team and can require round-the-clock "on-call" rotations of developers in the team to take ressponsibility.
+> A Next.js app maintained — observed, fixed, reviewed, and shipped — by an autonomous agent. Humans only step in for hard cases.
 
-To reduce the burden of maintenence tasks, this codebase provides a demo of a cloud-based long-running "manager" agent which monitors the app, create tasks, implements and deploy fixes. A second "reviewer" agent reviews and comments on changes before they are deployed. Large changes and pull requests that have receive multiple rounds of review can be escalated to a human for final approval. In practice a team might approve all of the changes created while they get comfortable with the agent's decision making.
+## TL;DR
 
-## Implementation
+- **What.** A live Next.js travel-planner app whose maintenance work (bug fixes, error triage, dependency upkeep, small features) is done by a long-running AI agent.
+- **How.** A cloud-hosted Anthropic Managed Agent runs every 30 minutes (and on GitHub webhooks). It checks Vercel + Sentry, files Linear tickets for new issues, picks up tickets, writes code, runs Playwright tests against a local dev server, opens PRs.
+- **Reviewed by another agent.** A separate reviewer agent reads each PR cold, builds, runs tests, posts approve / request-changes / escalate. Three rounds of changes → escalates to a human.
+- **Learns.** Each session can append to `.claude/memory/`. A retro agent runs daily, summarises 24h of activity in a Linear project update, and proposes memory edits as a PR.
 
-The agent using an Anthropic managed agent to run Claude Code in a serverless, file-system backed function as needed. A 1 hour cron job triggers the agent to monitor observability signals, create tasks, and pick up any available tasks. Tasks are managed in a Linear board via MCP, providing a control plane.
+## Why
 
-To deploy new code without human intervention the agent runs the app locally to test work in progress, and can monitor and manage the deployment pipeline in Vercel. The agent can run the app in the browser locally using Playwrite and for any front-end changes will add screenshots and a video of any changes to the pull request, which improves reliability.
+Production apps need constant care: stack traces to triage, slow endpoints to investigate, libraries to upgrade, regressions to roll back. That work eats focus time and often demands on-call rotations.
 
-The repository is structured as a standard NextJS app for the core product (a travel planner AI), with the managing agent in `./ai-manager`. Start a REPL session into a new agent using `npm run manager`.
+This repo is a working demo of pushing that work onto an AI agent — with another agent as a safety net.
 
-The agent posts a daily project update to Linear, including and flagging actions that need human review.
+## How it works
 
-Long term memory is stored in `.claude/memory`. The agent updates this after each session and does a broader review for patterns across sessions every 24 hours ("dreaming").
+**Two cron-driven loops + webhook-driven resumes**
 
-## Limitations and extensions
+1. **Manager** (`/api/manager-tick`, every 30 min). Reads memory, checks Vercel + Sentry, files tickets, picks up one Linear ticket, runs the dev loop locally in a sandbox (install, dev server, Playwright, build, lint), opens a PR.
+2. **Reviewer** (`/api/reviewer-tick`, every 30 min). Reads each open PR cold, builds, runs e2e, posts `AGENT_REVIEW: APPROVED | REQUEST_CHANGES | ESCALATE`.
+3. **Webhooks** (`/api/github-webhook`). PR opens → reviewer fires immediately. Reviewer approval → manager session resumes (full context) and squash-merges.
 
-- The agent cannot add new infrastructure or pay for services beyond what is available over MCP. It cannot manage or set-up environment variables. This means you cannot ask it, or any other agent, to bootstrap itself onto a new app.
-- The review process is slow. For robustness the manager and reviewer agent both run on a cron job, which means there can be a delay between the manager finishing and the reviewer starting. Ideally this would use an event-based system.
-- No attempt to set up product analytics, user- managementfeedback, cross-browser issue support via BrowserStack MCP, however these are relatively trivial to add to the agent once it is running.
-- Non-portable - setting up the agent requires a fair amount of human infrastructure work
+**Daily retro** (`/api/retro-tick`, 07:00 UTC). Reads 24h of activity, posts a Linear project update with a health field, and proposes `.claude/memory/` edits as a PR.
 
-My hope is that this inspires you to set up your own ai-manager for your repos. You can reach me at (willtay.com)[https://willtay.com/]
+**Stack**
+
+- **Anthropic Managed Agents** — three agents (manager, reviewer, retro), all running in cloud sandboxes with a mounted clone of this repo.
+- **Linear MCP** — tickets, comments, project updates.
+- **GitHub MCP** — PRs, reviews, files.
+- **Vercel MCP** — deployments, logs.
+- **Sentry MCP** — runtime errors.
+- **Vercel** — hosting + cron + webhooks for the orchestration routes.
+- **Playwright** — e2e tests inside the sandbox.
+
+**Structure**
+
+```
+app/                Next.js travel-planner (the demo product)
+ai-manager/         Agent YAML configs, OAuth helpers, bootstrap scripts
+app/api/*-tick/     Vercel cron entry points
+app/api/github-webhook/  Event-driven trigger
+.claude/memory/     Persistent agent memory (learnings, decisions, conventions)
+tests/e2e/          Playwright suite
+```
+
+## Quick start
+
+```bash
+npm run manager           # interactive REPL into a manager session
+npm run manager:tick      # one-shot operational loop, prints transcript
+npm run manager:bootstrap # apply agent YAML changes to the live agent
+```
+
+## Limitations
+
+- **Bring your own infrastructure.** The agent cannot create Vercel projects, set env vars, register OAuth apps, or pay for services. Bootstrapping is human-only.
+- **Account-scoped credentials.** The Vercel MCP credential covers the whole account, not just this project. Acceptable for a demo, not for a multi-tenant deployment.
+- **No product analytics or feedback loop.** Easy to add (PostHog MCP, etc.), not done here.
+- **Single-agent throughput.** WIP limit of 1 — the manager won't pick up a second ticket while another is in flight. Keeps things simple, caps throughput.
+
+## Contact
+
+If this inspired you to wire up your own — or if you want to swap notes — reach me at [willtay.com](https://willtay.com/).
