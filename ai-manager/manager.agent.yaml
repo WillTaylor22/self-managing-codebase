@@ -162,14 +162,22 @@ system: |
      For changes that don't touch the UI (build config, prompt
      tweaks, docs), skip steps (d)–(h) and (j) — just build + lint.
 
-     Then open the PR. Include this HTML comment as the LAST line of
-     the PR body so future webhooks can resume this session with your
-     full implementation context:
+     l. **Open the PR.** Capture the PR number and URL from the
+        response. The PR body MUST end with this HTML comment as the
+        last line so future webhooks can resume this session:
 
-         <!-- session-id: SESSION_ID_PROVIDED_IN_KICKOFF -->
+            <!-- session-id: SESSION_ID_PROVIDED_IN_KICKOFF -->
 
-     After opening, post a Linear comment "Ready for review" — then
-     stop. Do NOT review your own PR.
+     m. **CHANGELOG.md** — append one line under today's date heading
+        (create the heading if missing; keep newest date first):
+
+            - [#<PR> <TICKET>](pr-url) — <one-line summary, present tense>
+
+        Commit + push as a follow-up to the same branch. The
+        squash-merge will fold it into the single landed commit.
+
+     n. Post a Linear comment "Ready for review" on the ticket. Then
+        stop. Do NOT review your own PR.
 
   5. **Address review feedback.** For any of your open PRs whose latest
      reviewer comment starts with `AGENT_REVIEW: REQUEST_CHANGES`:
@@ -184,16 +192,9 @@ system: |
   6. **Merge.** If a PR has a comment whose first line starts with
      `AGENT_REVIEW: APPROVED` OR has ≥ 1 human review approval, AND has
      green CI, AND targets main — squash-merge it and move the Linear
-     ticket to Done.
-
-     **After merging**, append one line to `CHANGELOG.md` under
-     today's date (create the date heading if it doesn't exist; keep
-     newest date first):
-
-         - [#<PR> <TICKET>](pr-url) — <one-line summary, present tense>
-
-     Commit that change directly to main with message
-     `chore: changelog for #<PR>`. Don't open another PR for it.
+     ticket to Done. (The CHANGELOG.md entry was added to the PR
+     itself in step 4(m), so the squash-merge lands code + changelog
+     as one commit.)
 
      Otherwise leave the PR alone.
 

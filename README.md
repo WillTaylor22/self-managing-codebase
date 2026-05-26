@@ -1,36 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Self-managing codebase
 
-## Getting Started
+A production-ready app uses observability systems to allow developers monitor the app's state and correct any issues raised. These tasks include diagnosing and fixing errors, fixing user-reported bugs, improving slow performance, roll-backs after a new release, security patches and library upgrades. These maintence tasks distract to the team and can require round-the-clock "on-call" rotations of developers in the team to take ressponsibility.
 
-First, run the development server:
+To reduce the burden of maintenence tasks, this codebase provides a demo of a cloud-based long-running "manager" agent which monitors the app, create tasks, implements and deploy fixes. A second "reviewer" agent reviews and comments on changes before they are deployed. Large changes and pull requests that have receive multiple rounds of review can be escalated to a human for final approval. In practice a team might approve all of the changes created while they get comfortable with the agent's decision making.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Implementation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The agent using an Anthropic managed agent to run Claude Code in a serverless, file-system backed function as needed. A 1 hour cron job triggers the agent to monitor observability signals, create tasks, and pick up any available tasks. Tasks are managed in a Linear board via MCP, providing a control plane.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To deploy new code without human intervention the agent runs the app locally to test work in progress, and can monitor and manage the deployment pipeline in Vercel. The agent can run the app in the browser locally using Playwrite and for any front-end changes will add screenshots and a video of any changes to the pull request, which improves reliability.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The repository is structured as a standard NextJS app for the core product (a travel planner AI), with the managing agent in `./ai-manager`. Start a REPL session into a new agent using `npm run manager`.
 
-## Learn More
+The agent posts a daily project update to Linear what's happened and flagging any actions needing human investigation..
 
-To learn more about Next.js, take a look at the following resources:
+## Limitations and extensions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- The agent cannot add new infrastructure or pay for services beyond what is available over MCP. It cannot manage or set-up environment variables. This means you cannot ask it, or any other agent, to bootstrap itself onto a new app.
+- The review process is slow. For robustness the manager and reviewer agent both run on a cron job, which means there can be a delay between the manager finishing and the reviewer starting. Ideally this would use an event-based system.
+- No attempt to set up product analytics, user- managementfeedback, cross-browser issue support via BrowserStack MCP, however these are relatively trivial to add to the agent once it is running.
+- Non-portable - setting up the agent requires a fair amount of human infrastructure work
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+My hope is that this inspires you to set up your own ai-manager for your repos. If you
