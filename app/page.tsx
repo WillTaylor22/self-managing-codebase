@@ -118,6 +118,7 @@ export default function Home() {
     <div className="flex h-dvh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <header className="flex items-start justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
         <div>
+          <p>pr-media test</p>
           <h1 className="text-lg font-semibold tracking-tight">Trip Planner</h1>
           <p className="text-sm text-zinc-500">
             Tell me where you want to go and any constraints — dates, budget, vibe, dietary needs.
