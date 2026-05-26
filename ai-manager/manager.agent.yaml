@@ -187,10 +187,12 @@ system: |
      For changes that don't touch the UI (build config, prompt
      tweaks, docs), skip steps (d)–(h) and (j) — just build + lint.
 
-     l. **Open the PR.** The PR body MUST end with this HTML comment
-        as the last line so future webhooks can resume this session:
+     l. **Open the PR.** The PR body MUST end with this plain-text
+        marker on its own line so future webhooks can resume this
+        session (HTML-comment shape is stripped by the GitHub MCP
+        body filter — ENG-25):
 
-            <!-- session-id: SESSION_ID_PROVIDED_IN_KICKOFF -->
+            session-id: SESSION_ID_PROVIDED_IN_KICKOFF
 
         **Editing a PR body later:** `gh pr edit` fails in this repo
         with a Projects-classic deprecation error (exit 1) even when

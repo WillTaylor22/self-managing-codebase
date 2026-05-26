@@ -40,7 +40,7 @@ The token is scoped to the public 'pr-media-2' Vercel Blob store — used by ste
 
 const baseGoal =
   customGoal ||
-  `Wake up. Your session id is ${session.id} — when you open a PR, include "<!-- session-id: ${session.id} -->" as the last line of the PR body so future webhooks can resume this session. Run the operational loop in your system prompt. Stop when there is nothing left.`;
+  `Wake up. Your session id is ${session.id} — when you open a PR, include "session-id: ${session.id}" on its own line as the last line of the PR body so future webhooks can resume this session. Run the operational loop in your system prompt. Stop when there is nothing left.`;
 
 const goal = `${baseGoal}\n\n${sessionEnv}`;
 
