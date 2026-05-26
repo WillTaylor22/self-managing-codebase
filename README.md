@@ -12,7 +12,9 @@ To deploy new code without human intervention the agent runs the app locally to 
 
 The repository is structured as a standard NextJS app for the core product (a travel planner AI), with the managing agent in `./ai-manager`. Start a REPL session into a new agent using `npm run manager`.
 
-The agent posts a daily project update to Linear what's happened and flagging any actions needing human investigation..
+The agent posts a daily project update to Linear, including and flagging actions that need human review.
+
+Long term memory is stored in `.claude/memory`. The agent updates this after each session and does a broader review for patterns across sessions every 24 hours ("dreaming").
 
 ## Limitations and extensions
 
@@ -21,4 +23,4 @@ The agent posts a daily project update to Linear what's happened and flagging an
 - No attempt to set up product analytics, user- managementfeedback, cross-browser issue support via BrowserStack MCP, however these are relatively trivial to add to the agent once it is running.
 - Non-portable - setting up the agent requires a fair amount of human infrastructure work
 
-My hope is that this inspires you to set up your own ai-manager for your repos. If you
+My hope is that this inspires you to set up your own ai-manager for your repos. You can reach me at (willtay.com)[https://willtay.com/]
