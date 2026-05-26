@@ -8,6 +8,7 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 - [learnings/vercel-blocks-unknown-author-email](learnings/2026-05-26-vercel-blocks-unknown-author-email.md) — Vercel preview deploys block when commit author email has no GitHub account; use the noreply alias
 - [learnings/sandbox-cant-clone-private-repo](learnings/2026-05-26-sandbox-cant-clone-private-repo.md) — Don't `git clone` from sandbox bash; the `github_repository` resource is auth'd, raw `git clone` is not
 - [learnings/github-mcp-strips-html-comments](learnings/2026-05-26-github-mcp-strips-html-comments.md) — `update_pull_request` silently strips `<!-- ... -->` from PR bodies; session-id marker can't be set by agent (ENG-25)
+- [learnings/closed-pr-receives-review-after-close](learnings/2026-05-26-closed-pr-receives-review-after-close.md) — Closed PR can still get a REQUEST_CHANGES review seconds after dup-close; don't reopen, surface to sibling PR + Linear (PR #18 vs #20 ENG-25 race)
 
 ## Decisions
 - [decisions/mcp-for-small-writes-checkout-for-big](decisions/2026-05-26-mcp-for-small-writes-checkout-for-big.md) — Single-file writes go through GitHub MCP; multi-file or test-needing changes use the mounted checkout + `git push`
