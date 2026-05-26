@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { extractSessionId } from '@/lib/extract-session-id';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -13,18 +14,6 @@ function verifySignature(rawBody: string, sigHeader: string | null, secret: stri
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
-}
-
-function extractSessionId(text: string | undefined | null): string | null {
-  if (!text) return null;
-  // Accept two shapes:
-  //   1. Plain-text line:  session-id: sesn_xxxx   (current — survives GitHub MCP body filter, ENG-25)
-  //   2. HTML comment:     <!-- session-id: sesn_xxxx -->   (legacy — MCP strips this on update, kept for back-compat)
-  // Both `sesn_` (current SDK) and `sthr_` (legacy) prefixes are accepted.
-  const html = text.match(/<!--\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*-->/);
-  if (html) return html[1];
-  const plain = text.match(/^\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*$/m);
-  return plain?.[1] ?? null;
 }
 
 async function fetchPrBody(prNumber: number, token: string): Promise<string | null> {

@@ -8,6 +8,7 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 - [learnings/vercel-blocks-unknown-author-email](learnings/2026-05-26-vercel-blocks-unknown-author-email.md) — Vercel preview deploys block when commit author email has no GitHub account; use the noreply alias
 - [learnings/sandbox-cant-clone-private-repo](learnings/2026-05-26-sandbox-cant-clone-private-repo.md) — Don't `git clone` from sandbox bash; the `github_repository` resource is auth'd, raw `git clone` is not
 - [learnings/github-mcp-strips-html-comments](learnings/2026-05-26-github-mcp-strips-html-comments.md) — `create_pull_request` AND `update_pull_request` strip `<!-- ... -->` from PR bodies; ENG-25 resolved by moving the session-id marker to a plain-text line
+- [learnings/regex-last-match-semantics](learnings/2026-05-26-regex-last-match-semantics.md) — `String.match(/.../m)` returns FIRST match; for "last line of body" use `matchAll(...).at(-1)` (PR #20 bug)
 
 ## Decisions
 - [decisions/mcp-for-small-writes-checkout-for-big](decisions/2026-05-26-mcp-for-small-writes-checkout-for-big.md) — Single-file writes go through GitHub MCP; multi-file or test-needing changes use the mounted checkout + `git push`
