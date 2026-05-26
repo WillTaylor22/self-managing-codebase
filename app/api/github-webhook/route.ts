@@ -17,8 +17,20 @@ function verifySignature(rawBody: string, sigHeader: string | null, secret: stri
 
 function extractSessionId(text: string | undefined | null): string | null {
   if (!text) return null;
-  const m = text.match(/<!--\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*-->/);
-  return m?.[1] ?? null;
+  // Preferred shape (ENG-25): a plain-text line on its own.
+  //   session-id: sesn_xxxxxxxx
+  // The GitHub MCP `update_pull_request` tool strips `<!-- ... -->`
+  // HTML comments from PR bodies, so the agent can only land a marker
+  // in a non-comment shape.
+  const plain = text.match(
+    /(?:^|\n)\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*(?=\n|$)/i,
+  );
+  if (plain) return plain[1];
+  // Back-compat: the original HTML-comment shape, still accepted so
+  // any marker landed via the GitHub web API or a human PATCH on an
+  // older PR continues to resume correctly.
+  const html = text.match(/<!--\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*-->/);
+  return html?.[1] ?? null;
 }
 
 async function fetchPrBody(prNumber: number, token: string): Promise<string | null> {
