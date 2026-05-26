@@ -35,7 +35,8 @@ console.log(`Session: ${session.id}`);
 
 const sessionEnv = `Session env (export these at the start of your shell, before any other work):
   export BLOB_READ_WRITE_TOKEN='${BLOB_READ_WRITE_TOKEN}'
-The token is scoped to the public 'pr-media-2' Vercel Blob store — used by step 4(j) to upload PR preview media.`;
+  export VERCEL_BLOB_API_URL='https://blob.vercel-storage.com'
+The token is scoped to the public 'pr-media-2' Vercel Blob store — used by step 4(j) to upload PR preview media. VERCEL_BLOB_API_URL pins @vercel/blob's control-plane host to one in the sandbox egress allowlist (the SDK default vercel.com/api/blob is blocked, causing put() to hang in async-retry; ENG-22).`;
 
 const baseGoal =
   customGoal ||
