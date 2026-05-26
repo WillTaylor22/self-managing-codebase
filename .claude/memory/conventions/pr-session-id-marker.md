@@ -12,6 +12,10 @@ fires for the PR (e.g. `issue_comment.created` with
 `AGENT_REVIEW: APPROVED`). With it, the webhook resumes the original
 manager session — full implementation context, no re-explaining.
 
+The webhook regex accepts both the legacy `sthr_` prefix and the
+current `sesn_` prefix returned by `client.beta.sessions.create()`.
+Use whichever prefix the kickoff `user.message` carries.
+
 Without it, the webhook falls back to creating a fresh session. The
 fresh session loses all design rationale and re-derives everything.
 Functional but wasteful.
