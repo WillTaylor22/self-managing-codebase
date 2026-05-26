@@ -131,16 +131,33 @@ export async function POST(req: Request) {
   const payload = JSON.parse(rawBody) as Record<string, unknown>;
   const action = payload.action as string | undefined;
 
+  // Author allowlist — only act on events from these GitHub logins.
+  // Repo is public, so anyone can open PRs / file comments. We only want
+  // the autonomous loop to fire for trusted actors.
+  const ALLOWLIST = (process.env.WEBHOOK_AUTHOR_ALLOWLIST ?? 'WillTaylor22')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  function allowed(login: string | undefined): boolean {
+    return !!login && ALLOWLIST.includes(login.toLowerCase());
+  }
+
   if (event === 'pull_request' && (action === 'opened' || action === 'synchronize')) {
-    const pr = payload.pull_request as { number: number };
+    const pr = payload.pull_request as { number: number; user?: { login?: string } };
+    if (!allowed(pr.user?.login)) {
+      return Response.json({ skipped: 'PR author not in allowlist', login: pr.user?.login, pr: pr.number });
+    }
     const sessionId = await fireReviewer(pr.number, action);
     return Response.json({ event, action, pr: pr.number, reviewer_session: sessionId });
   }
 
   if (event === 'issue_comment' && action === 'created') {
     const issue = payload.issue as { number: number; pull_request?: unknown };
-    const comment = payload.comment as { body: string };
+    const comment = payload.comment as { body: string; user?: { login?: string } };
     if (!issue.pull_request) return Response.json({ skipped: 'not a PR comment' });
+    if (!allowed(comment.user?.login)) {
+      return Response.json({ skipped: 'comment author not in allowlist', login: comment.user?.login, pr: issue.number });
+    }
 
     const firstLine = comment.body.split('\n')[0]?.trim() ?? '';
     if (firstLine.startsWith('AGENT_REVIEW: APPROVED')) {
@@ -164,7 +181,10 @@ export async function POST(req: Request) {
   }
 
   if (event === 'pull_request' && action === 'closed') {
-    const pr = payload.pull_request as { number: number; merged: boolean };
+    const pr = payload.pull_request as { number: number; merged: boolean; user?: { login?: string } };
+    if (!allowed(pr.user?.login)) {
+      return Response.json({ skipped: 'closed PR author not in allowlist', login: pr.user?.login, pr: pr.number });
+    }
     if (pr.merged) {
       const sessionId = await resumeOrFireManager(
         pr.number,
