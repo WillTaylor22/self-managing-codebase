@@ -1,10 +1,10 @@
 # PR body session-id marker
 
-Every PR opened by the manager MUST end with this HTML comment as the
-**last line** of the PR body:
+Every PR opened by the manager MUST end with a `session-id:` marker on
+its own line as the last non-empty line of the PR body:
 
 ```
-<!-- session-id: sesn_xxxxxxxxxxxxxxxx -->
+session-id: sesn_xxxxxxxxxxxxxxxx
 ```
 
 The `/api/github-webhook` route extracts this marker when a webhook
@@ -12,17 +12,21 @@ fires for the PR (e.g. `issue_comment.created` with
 `AGENT_REVIEW: APPROVED`). With it, the webhook resumes the original
 manager session — full implementation context, no re-explaining.
 
-The webhook regex accepts both the legacy `sthr_` prefix and the
-current `sesn_` prefix returned by `client.beta.sessions.create()`.
-Use whichever prefix the kickoff `user.message` carries.
+## Accepted shapes
 
-Without it, the webhook falls back to creating a fresh session. The
-fresh session loses all design rationale and re-derives everything.
-Functional but wasteful.
+The webhook regex accepts:
 
-The kickoff `user.message` includes the actual session id. Substitute
-it verbatim; don't paraphrase or omit.
+- Plain-text line: `session-id: sesn_...` — **preferred**. Survives
+  the GitHub MCP `update_pull_request` and `create_pull_request` body
+  filters (ENG-25). Always use this on new PRs.
+- Legacy HTML comment: `<!-- session-id: sesn_... -->` — still
+  matched for back-compat with PRs opened before ENG-25 landed, but
+  the agent cannot write this shape on a new PR because MCP strips it
+  on body create AND update. Read-only acceptance.
 
-The regex in `app/api/github-webhook/route.ts` accepts either
-`sesn_` (current SDK prefix) or `sthr_` (legacy) — both are valid.
-Use whatever the kickoff hands you.
+Both `sesn_` (current SDK prefix) and `sthr_` (legacy) are accepted.
+Use whatever the kickoff `user.message` carries, verbatim.
+
+Without the marker, the webhook falls back to creating a fresh
+session. The fresh session loses all design rationale and re-derives
+everything. Functional but wasteful.
