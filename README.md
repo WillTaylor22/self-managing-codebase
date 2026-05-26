@@ -1,6 +1,6 @@
 # Self-managing codebase
 
-> A Next.js app maintained — observed, fixed, reviewed, and shipped — by an autonomous agent. Humans only step in for hard cases.
+> A demo app maintained — observed, fixed, reviewed, and shipped — by an autonomous agent. Humans only step in for hard cases.
 
 ## TL;DR
 
