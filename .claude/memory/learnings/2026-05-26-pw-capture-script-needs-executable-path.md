@@ -1,0 +1,3 @@
+# Ad-hoc Playwright capture scripts must pass `executablePath`
+
+`tests/global-setup.ts` self-heals the cached browser path (outer `chromium-{wanted}` symlink and inner `chrome-headless-shell-linux64/chrome-headless-shell` layout) **only** when Playwright is launched via the test runner — it's wired as `globalSetup` in `playwright.config.ts`. One-shot capture scripts run via `node /workspace/repo/.pr-capture.cjs` (the step 4(j) flow in the manager prompt) bypass `globalSetup` entirely, so the launch fails with "Executable doesn't exist" even on a sandbox with a working cached browser. Fix: launch with `executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'` (the full chrome binary). Sidesteps the headless-shell layout question altogether.
