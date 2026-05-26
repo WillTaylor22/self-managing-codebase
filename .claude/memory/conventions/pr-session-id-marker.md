@@ -4,7 +4,7 @@ Every PR opened by the manager MUST end with this HTML comment as the
 **last line** of the PR body:
 
 ```
-<!-- session-id: sthr_xxxxxxxxxxxxxxxx -->
+<!-- session-id: sesn_xxxxxxxxxxxxxxxx -->
 ```
 
 The `/api/github-webhook` route extracts this marker when a webhook
@@ -18,3 +18,7 @@ Functional but wasteful.
 
 The kickoff `user.message` includes the actual session id. Substitute
 it verbatim; don't paraphrase or omit.
+
+The regex in `app/api/github-webhook/route.ts` accepts either
+`sesn_` (current SDK prefix) or `sthr_` (legacy) — both are valid.
+Use whatever the kickoff hands you.

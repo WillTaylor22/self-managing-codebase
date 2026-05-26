@@ -17,7 +17,7 @@ function verifySignature(rawBody: string, sigHeader: string | null, secret: stri
 
 function extractSessionId(text: string | undefined | null): string | null {
   if (!text) return null;
-  const m = text.match(/<!--\s*session-id:\s*(sthr_[A-Za-z0-9]+)\s*-->/);
+  const m = text.match(/<!--\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*-->/);
   return m?.[1] ?? null;
 }
 
