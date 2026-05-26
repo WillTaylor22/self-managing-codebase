@@ -13,6 +13,7 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 - [learnings/closed-pr-receives-review-after-close](learnings/2026-05-26-closed-pr-receives-review-after-close.md) — Closed PR can still get a REQUEST_CHANGES review seconds after dup-close; don't reopen, surface to sibling PR + Linear (PR #18 vs #20 ENG-25 race)
 - [learnings/review-feedback-fanout](learnings/2026-05-26-review-feedback-fanout.md) — multiple REQUEST_CHANGES comments fire multiple manager sessions; fetch + check head-branch commits newer than the reviewer comment before doing work (PR #20)
 - [learnings/vercel-bot-status-as-deploy-health-fallback](learnings/2026-05-26-vercel-bot-status-as-deploy-health-fallback.md) — When Vercel MCP/CLI auth is broken, read the GitHub Vercel-bot's commit status on the latest PR HEAD as a deploy-health fallback
+- [learnings/manager-agent-yaml-needs-manual-bootstrap](learnings/2026-05-26-manager-agent-yaml-needs-manual-bootstrap.md) — `manager.agent.yaml` edits do NOT auto-deploy; a human must run `npm run bootstrap` from `ai-manager/` with `ANTHROPIC_API_KEY`+`AGENT_ID` to push the prompt to the live agent (ENG-28)
 
 ## Decisions
 - [decisions/mcp-for-small-writes-checkout-for-big](decisions/2026-05-26-mcp-for-small-writes-checkout-for-big.md) — Single-file writes go through GitHub MCP; multi-file or test-needing changes use the mounted checkout + `git push`
