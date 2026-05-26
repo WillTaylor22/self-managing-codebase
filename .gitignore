@@ -45,5 +45,8 @@ playwright-report/
 test-results/
 playwright/.cache/
 
+# PR-media capture output (scripts/capture-pr-media.mjs)
+.pr-media/
+
 # Sentry Config File
 .env.sentry-build-plugin

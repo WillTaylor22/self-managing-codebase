@@ -2,98 +2,114 @@
 /**
  * Capture screenshot + screen recording of the running app for PR previews.
  *
- * Honours CAPTURE_URL (defaults to http://localhost:3000). Outputs:
+ * Outputs (under `.pr-media/`, which is gitignored — see `.gitignore`):
  *   .pr-media/screenshot.png
  *   .pr-media/demo.webm     (Playwright writes webm natively)
  *
  * Run while a dev/preview server is already responding at CAPTURE_URL.
+ *
+ * Env vars (all optional):
+ *   CAPTURE_URL              target URL (default http://localhost:3000)
+ *   CAPTURE_VIEWPORT         WxH viewport, e.g. 390x844 for mobile
+ *                            (default 1280x800)
+ *   CAPTURE_POST_LOAD_MS     ms to wait after page load before screenshot
+ *                            (default 500)
+ *   CAPTURE_TIMEOUT_MS       page.goto networkidle timeout (default 30000)
+ *   PLAYWRIGHT_BROWSERS_PATH if set, ENG-19 browser-cache shim runs
+ *                            against it (matches tests/global-setup.ts).
+ *                            Leave unset on humans / real CI to use
+ *                            Playwright's default cache.
  */
-import { mkdirSync, renameSync, readdirSync, existsSync, rmSync, lstatSync, readFileSync, symlinkSync } from 'node:fs';
+import { mkdirSync, renameSync, readdirSync, existsSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { applyBrowserCacheShim } from './lib/pw-browser-shim.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
 
-// --- Inline copy of tests/global-setup.ts logic (ENG-19 shim) ---
-// The sandbox ships chromium-1194 but @playwright/test@1.60 wants 1223.
-process.env.PLAYWRIGHT_BROWSERS_PATH ||= '/opt/pw-browsers';
-const browsersRoot = process.env.PLAYWRIGHT_BROWSERS_PATH;
-function highestRealRevision(prefix) {
-  const re = new RegExp(`^${prefix}-(\\d+)$`);
-  const revs = [];
-  for (const entry of readdirSync(browsersRoot)) {
-    const m = entry.match(re);
-    if (!m) continue;
-    if (lstatSync(join(browsersRoot, entry)).isSymbolicLink()) continue;
-    revs.push(parseInt(m[1], 10));
-  }
-  revs.sort((a, b) => b - a);
-  return revs[0]?.toString();
-}
-const pwCoreBrowsers = JSON.parse(
-  readFileSync(join(root, 'node_modules/playwright-core/browsers.json'), 'utf8'),
-);
-for (const name of ['chromium', 'chromium-headless-shell']) {
-  const wanted = pwCoreBrowsers.browsers.find((b) => b.name === name)?.revision;
-  if (!wanted) continue;
-  const dirName = name === 'chromium-headless-shell' ? 'chromium_headless_shell' : name;
-  const wantedPath = join(browsersRoot, `${dirName}-${wanted}`);
-  if (existsSync(wantedPath)) continue;
-  const best = highestRealRevision(dirName);
-  if (!best) continue;
-  const bestDir = join(browsersRoot, `${dirName}-${best}`);
-  symlinkSync(bestDir, wantedPath);
-  console.log(`[pw-browser-shim] symlinked ${dirName}-${best} → ${dirName}-${wanted}`);
-  // headless-shell needs inner dir shim too
-  if (name === 'chromium-headless-shell') {
-    const innerWantedDir = join(bestDir, 'chrome-headless-shell-linux64');
-    const innerLegacyDir = join(bestDir, 'chrome-linux');
-    if (!existsSync(innerWantedDir) && existsSync(innerLegacyDir)) {
-      symlinkSync(innerLegacyDir, innerWantedDir);
-      const innerWantedBin = join(innerWantedDir, 'chrome-headless-shell');
-      const innerLegacyBin = join(innerWantedDir, 'headless_shell');
-      if (!existsSync(innerWantedBin) && existsSync(innerLegacyBin)) {
-        symlinkSync('headless_shell', innerWantedBin);
-      }
-    }
-  }
-}
-// --- end shim ---
+// ENG-19: reconcile sandbox Chromium revision drift. No-op when
+// PLAYWRIGHT_BROWSERS_PATH is unset (humans / real CI).
+applyBrowserCacheShim();
 
-const { chromium } = await import('playwright');
+// `@playwright/test` is the declared dep; it re-exports `chromium`. Avoid
+// reaching for the transitive `playwright` package directly.
+const { chromium } = await import('@playwright/test');
+
+function parseViewport(raw) {
+  const fallback = { width: 1280, height: 800 };
+  if (!raw) return fallback;
+  const match = raw.match(/^(\d+)x(\d+)$/i);
+  if (!match) {
+    console.warn(
+      `[capture] ignoring invalid CAPTURE_VIEWPORT=${raw}; expected WxH (e.g. 1280x800)`,
+    );
+    return fallback;
+  }
+  return { width: parseInt(match[1], 10), height: parseInt(match[2], 10) };
+}
+
+function parsePositiveInt(raw, fallback, name) {
+  if (raw === undefined) return fallback;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n) || n < 0) {
+    console.warn(`[capture] ignoring invalid ${name}=${raw}; using ${fallback}`);
+    return fallback;
+  }
+  return n;
+}
 
 const url = process.env.CAPTURE_URL || 'http://localhost:3000';
+const viewport = parseViewport(process.env.CAPTURE_VIEWPORT);
+const postLoadMs = parsePositiveInt(
+  process.env.CAPTURE_POST_LOAD_MS,
+  500,
+  'CAPTURE_POST_LOAD_MS',
+);
+const gotoTimeoutMs = parsePositiveInt(
+  process.env.CAPTURE_TIMEOUT_MS,
+  30_000,
+  'CAPTURE_TIMEOUT_MS',
+);
+
 const outDir = join(root, '.pr-media');
 const videosTmp = join(outDir, '_videos');
 mkdirSync(videosTmp, { recursive: true });
 
-console.log(`[capture] target = ${url}`);
+console.log(
+  `[capture] target=${url} viewport=${viewport.width}x${viewport.height} postLoad=${postLoadMs}ms timeout=${gotoTimeoutMs}ms`,
+);
 
 const browser = await chromium.launch();
 const context = await browser.newContext({
-  viewport: { width: 1280, height: 800 },
-  recordVideo: { dir: videosTmp, size: { width: 1280, height: 800 } },
+  viewport,
+  recordVideo: { dir: videosTmp, size: viewport },
 });
 const page = await context.newPage();
 
-await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
-await page.waitForTimeout(500);
+await page.goto(url, { waitUntil: 'networkidle', timeout: gotoTimeoutMs });
+await page.waitForTimeout(postLoadMs);
 
 const shotPath = join(outDir, 'screenshot.png');
 await page.screenshot({ path: shotPath, fullPage: false });
 console.log(`[capture] screenshot → ${shotPath}`);
 
-// Some interaction so the video has motion
+// Some interaction so the video has motion. Matches the locator convention
+// used in tests/e2e/* (getByPlaceholder(/where to/i)).
 await page.mouse.move(200, 200);
 await page.waitForTimeout(300);
 await page.mouse.move(900, 500, { steps: 20 });
 await page.waitForTimeout(300);
-const input = page.locator('input[placeholder="Where to?"]').first();
+const input = page.getByPlaceholder(/where to/i).first();
 if (await input.count()) {
   await input.click();
   await input.type('5 days in Lisbon', { delay: 50 });
   await page.waitForTimeout(400);
+} else {
+  console.warn(
+    '[capture] no input matching /where to/i — demo recording will have no typing segment. If the homepage chat input was renamed, update this script.',
+  );
 }
 
 const video = page.video();
