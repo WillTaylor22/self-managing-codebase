@@ -14,5 +14,5 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 - [decisions/two-agent-builder-reviewer](decisions/2026-05-25-two-agent-builder-reviewer.md) — Separate agents for build vs. review so the reviewer reads diffs cold
 
 ## Conventions
-- [conventions/pr-session-id-marker](conventions/pr-session-id-marker.md) — PR body MUST end with `<!-- session-id: sthr_... -->` so webhooks can resume
+- [conventions/pr-session-id-marker](conventions/pr-session-id-marker.md) — PR body MUST end with `<!-- session-id: sesn_... -->` (or legacy `sthr_...`) so webhooks can resume
 - [conventions/agent-review-marker](conventions/agent-review-marker.md) — Reviewer's verdict goes on the first line as `AGENT_REVIEW: APPROVED|REQUEST_CHANGES|ESCALATE — <rationale>`
