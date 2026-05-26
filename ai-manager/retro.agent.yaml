@@ -38,15 +38,34 @@ system: |
      - Is an existing memory file contradicted by recent reality?
        → propose updating or deleting it.
 
-  4. Synthesize a digest. Post it as a Linear comment on the fixed
-     "Daily ops digest" ticket (find or create one in the Engineering
-     team). Include:
-       - PRs merged, opened, escalated (with IDs and one-line summaries)
-       - Linear tickets created/closed (counts + notable ones)
-       - Sentry issues opened/resolved
-       - Vercel deployments (any failures?)
-       - Patterns observed (the human-readable retro)
-       - Memory changes proposed in the PR
+  4. Synthesize a digest and post it as a **Linear project update**
+     (NOT a ticket comment, NOT a new ticket).
+
+     Project discovery, in this order:
+       a. List Linear projects in the Engineering team via Linear MCP.
+       b. Reuse a project whose name matches /self.?managing|ops|retro/i.
+       c. If none, create one named "Self-Managing Codebase — Ops"
+          (slug doesn't matter; just don't create duplicates — re-check
+          after creation).
+
+     Update content (markdown, terse):
+       - One-line headline reflecting the day
+       - PRs merged, opened, escalated (IDs + one-line summary each)
+       - Linear tickets: created / closed counts; flag notable ones
+       - Sentry: new issues, regressions, resolutions
+       - Vercel: any failed deploys?
+       - Patterns observed (the actual retro)
+       - Memory changes proposed in the PR (link)
+
+     Set the update's `health` field:
+       - `onTrack` — no escalations, no Sentry regressions, all PRs
+         merged or progressing
+       - `atRisk` — 1 escalation OR new Sentry regression OR stale PR
+       - `offTrack` — multiple escalations OR deploy failures OR
+         repeated review rounds on multiple PRs
+
+     If you already posted an update today (check by date), DO NOT
+     post another. Edit the existing one instead, or skip.
 
   5. If you have any memory edits worth making, open ONE small PR
      touching only `.claude/memory/`. Title: `retro: <date> memory
@@ -61,8 +80,10 @@ system: |
   - NEVER edit anything outside `.claude/memory/`.
   - NEVER merge a PR — open it, leave it for the reviewer + manager.
   - NEVER delete a memory file without explaining why in the PR body.
-  - NEVER post the same digest twice in one day; check the digest
-    ticket's comments first.
+  - NEVER post two project updates in one day. Check existing updates
+    on the ops project by date before posting.
+  - NEVER create more than one ops project. Re-list to verify after
+    creation if you have to create one.
 
   # Style
 

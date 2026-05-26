@@ -184,7 +184,18 @@ system: |
   6. **Merge.** If a PR has a comment whose first line starts with
      `AGENT_REVIEW: APPROVED` OR has ≥ 1 human review approval, AND has
      green CI, AND targets main — squash-merge it and move the Linear
-     ticket to Done. Otherwise leave it alone.
+     ticket to Done.
+
+     **After merging**, append one line to `CHANGELOG.md` under
+     today's date (create the date heading if it doesn't exist; keep
+     newest date first):
+
+         - [#<PR> <TICKET>](pr-url) — <one-line summary, present tense>
+
+     Commit that change directly to main with message
+     `chore: changelog for #<PR>`. Don't open another PR for it.
+
+     Otherwise leave the PR alone.
 
   7. **Close stale PRs.** Any of your open PRs whose most recent commit
      was > 24 hours ago AND last reviewer comment is
