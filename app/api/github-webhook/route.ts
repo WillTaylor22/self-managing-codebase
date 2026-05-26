@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { extractSessionId } from '@/lib/extract-session-id';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -13,12 +14,6 @@ function verifySignature(rawBody: string, sigHeader: string | null, secret: stri
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
-}
-
-function extractSessionId(text: string | undefined | null): string | null {
-  if (!text) return null;
-  const m = text.match(/<!--\s*session-id:\s*((?:sthr_|sesn_)[A-Za-z0-9]+)\s*-->/);
-  return m?.[1] ?? null;
 }
 
 async function fetchPrBody(prNumber: number, token: string): Promise<string | null> {
