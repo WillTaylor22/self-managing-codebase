@@ -39,7 +39,7 @@ This repo is demo that showcases what is possible in pushing those tasks onto a 
 
 **Stack**
 
-- **Anthropic Managed Agents** — three agents (manager, reviewer, retro), all running in cloud sandboxes with a mounted clone of this repo.
+- **Anthropic Managed Agents** — three agents (manager, reviewer, retro), all running in filesystem-backed cloud sandboxes with a mounted clone of this repo.
 - **Linear MCP** — Store and control plane for tasks; also the location where the agent provides project updates.
 - **GitHub MCP** — PRs, reviews, files.
 - **Vercel MCP** — deployments, logs.
