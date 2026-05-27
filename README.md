@@ -2,11 +2,16 @@
 
 A demo showcasing an app maintained by a long-running agent.
 
-Easy to add you your own app using Claude Code:
+## Install
 ```
-git clone https://github.com/WillTaylor22/self-managing-codebase temp
-claude --dangerousely-skip-permissions
-On a new worktree, please implement the full AI manager setup at temp/self-managing-codebase into this project.
+# temporarily clone the codebase
+git clone https://github.com/WillTaylor22/self-managing-codebase temp 
+
+# start an agent
+claude [--dangerously-skip-permissions]
+
+# let the agent drive
+On a new worktree, implement the full AI manager setup demonstrated in temp/self-managing-codebase
 ```
 
 ## Motivation
