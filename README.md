@@ -57,7 +57,7 @@ npm run manager:bootstrap # apply agent YAML changes to the live agent
 
 ## Known limitations
 
-- **Bring your own infrastructure.** The agent cannot create infrastructure, set env vars, register OAuth apps, or pay for services. Bootstrapping needs human-oversignt.
+- **Bring your own infrastructure.** The agent cannot create infrastructure, set env vars, register OAuth apps, or pay for services. Bootstrapping is human-only.
 - **Further observability.** Product analytics, metrics and so on are trivial to add once the agent is running, and thus not done here.
 - **Single-agent throughput.** WIP limit of 1 — the manager won't pick up a second ticket while another is in flight. Keeps things simple, caps throughput.
 
