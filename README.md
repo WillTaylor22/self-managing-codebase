@@ -2,6 +2,13 @@
 
 A demo showcasing an app maintained by a long-running agent.
 
+Easy to add you your own app using Claude Code:
+```
+git clone https://github.com/WillTaylor22/self-managing-codebase temp
+claude --dangerousely-skip-permissions
+On a new worktree, please implement the full AI manager setup at temp/self-managing-codebase into this project.
+```
+
 ## Motivation
 
 Production apps need constant care: errors and stack traces to triage, slow endpoints to investigate, libraries to upgrade, regressions to roll back. That work eats developer time and can require on-call rotations.
@@ -45,7 +52,7 @@ npm run manager:bootstrap # apply agent YAML changes to the live agent
 
 ## Known limitations
 
-- **Bring your own infrastructure.** The agent cannot create infrastructure, set env vars, register OAuth apps, or pay for services. Bootstrapping is human-only.
+- **Bring your own infrastructure.** The agent cannot create infrastructure, set env vars, register OAuth apps, or pay for services. Bootstrapping needs human-oversignt.
 - **Further observability.** Product analytics, metrics and so on are trivial to add once the agent is running, and thus not done here.
 - **Single-agent throughput.** WIP limit of 1 — the manager won't pick up a second ticket while another is in flight. Keeps things simple, caps throughput.
 
