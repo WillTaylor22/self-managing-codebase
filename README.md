@@ -1,9 +1,10 @@
-# Self-managing codebase
+# Autonomous, Self-learning Coding Agent
 
 A demo showcasing an app maintained by a 100% autonomous, self-learning agent.
 
 <img width="1842" height="1110" alt="image" src="https://github.com/user-attachments/assets/da888f32-5e40-474a-b9f0-f1fb116cc445" />
-This same agent pushing to prod at our startup [Versey](https://versey.ai).
+
+_This same agent pushing to prod at our startup [Versey](https://www.versey.ai)._
 
 ## Install
 ```
