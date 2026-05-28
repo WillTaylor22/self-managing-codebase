@@ -3,7 +3,7 @@
 A demo showcasing an app maintained by a 100% autonomous, self-learning agent.
 
 <img width="1842" height="1110" alt="image" src="https://github.com/user-attachments/assets/da888f32-5e40-474a-b9f0-f1fb116cc445" />
-_This same agent pushing to prod at our startup [Versey](https://versey.ai)_
+This same agent pushing to prod at our startup [Versey](https://versey.ai).
 
 ## Install
 ```
@@ -19,7 +19,7 @@ On a new worktree, implement the full AI manager setup demonstrated in temp/self
 
 ## Motivation
 
-Even firing up Codex or Claude Code means context switching. Think a level higher. Imagine a super-intelligent and proactive engineer that both receives tasks and creates it own tasks by monitoring it's environment. You can send it messages in Slack or tickets in Linear, and it's able to pick up multiple jobs in tandem due the the serverless infrastructure. All PRs have screenshots and a video, and it is paired with an independent review agent which confirms quality and security.
+Even firing up Codex or Claude Code means context switching. Think a level higher. Imagine a super-intelligent and proactive engineer that both receives tasks and creates it own tasks by monitoring it's environment. You can send it messages in Slack or tickets in Linear, and it monitors various observability surfaces such as Sentry, Posthog, Snyk and Vercel to identify tasks. it's able to pick up multiple jobs in tandem due the the serverless infrastructure. All PRs have screenshots and a video, and it is paired with an independent review agent which confirms quality and security.
 
 Production apps need constant care: errors and stack traces to triage, slow endpoints to investigate, libraries to upgrade, regressions to roll back. That work eats developer time and can require on-call rotations.
 
