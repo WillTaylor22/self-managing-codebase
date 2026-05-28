@@ -17,6 +17,7 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 - [learnings/sentry-dedupe-must-check-closed-tickets](learnings/2026-05-27-sentry-dedupe-must-check-closed-tickets.md) — step-2 Sentry dedupe must match closed tickets too, not just open — canary errors (no Sentry write tools / ENG-21) get re-filed forever otherwise (APP-1 → ENG-17 closed → ENG-29 dup)
 - [learnings/fetch-before-merge-on-long-lived-branch](learnings/2026-05-27-fetch-before-merge-on-long-lived-branch.md) — On long-lived branches, run `git fetch origin <base>` before `git merge origin/<base>`; local origin ref goes stale during review-feedback rounds (PR #12 round 3 escalation)
 - [learnings/git-checkout-theirs-replaces-whole-file](learnings/2026-05-27-git-checkout-theirs-replaces-whole-file.md) — `git checkout --theirs <path>` during a merge replaces the WHOLE file, silently reverting unrelated edits earlier on the branch; verify with `git diff origin/<base>` afterwards (PR #29 round 1)
+- [learnings/verify-ticket-issues-still-exist-on-main](learnings/2026-05-28-verify-ticket-issues-still-exist-on-main.md) — Re-read the ticket's target file in current `origin/<base>` before drafting; humans push small fixes direct-to-main between ticket creation and agent pickup (PR #29 ENG-30 round 1)
 
 ## Decisions
 - [decisions/mcp-for-small-writes-checkout-for-big](decisions/2026-05-26-mcp-for-small-writes-checkout-for-big.md) — Single-file writes go through GitHub MCP; multi-file or test-needing changes use the mounted checkout + `git push`
