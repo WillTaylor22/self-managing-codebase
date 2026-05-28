@@ -1,4 +1,4 @@
-# Autonomous, Self-learning Coding Agent
+# Autonomous Coding Agent
 
 A demo showcasing an app maintained by a 100% autonomous, self-learning agent.
 
