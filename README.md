@@ -20,7 +20,7 @@ On a new worktree, implement the full AI manager setup demonstrated in temp/self
 
 ## Motivation
 
-Even firing up Codex or Claude Code means context switching. Think a level higher. Imagine a super-intelligent and proactive engineer that both receives tasks and creates it own tasks by monitoring it's environment. You can send it messages in Slack or tickets in Linear, and it monitors various observability surfaces such as Sentry, Posthog, Snyk and Vercel to identify tasks. it's able to pick up multiple jobs in tandem due the the serverless infrastructure. All PRs have screenshots and a video, and it is paired with an independent review agent which confirms quality and security.
+Even firing up Codex or Claude Code means context switching. Think a level higher. Imagine a super-intelligent and proactive engineer that both receives tasks and creates it own tasks by monitoring it's environment. You can send it messages in Slack or tickets in Linear, and it monitors various observability surfaces such as Sentry, Posthog, Snyk and Vercel to identify tasks. All PRs have screenshots and a video for verification, and it is paired with an independent review agent which confirms quality and security.
 
 Production apps need constant care: errors and stack traces to triage, slow endpoints to investigate, libraries to upgrade, regressions to roll back. That work eats developer time and can require on-call rotations.
 
