@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { extractSessionId } from '@/lib/extract-session-id';
+import { withManagerSessionEnv } from '@/lib/manager-session-env';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -76,10 +77,15 @@ async function resumeOrFireManager(prNumber: number, instructionText: string): P
   const body = await fetchPrBody(prNumber, process.env.GITHUB_PAT!);
   const existing = extractSessionId(body);
 
+  // Re-export on resume too: the original kickoff did export the vars,
+  // but if a new shell is spawned the agent needs to re-export. Cheap
+  // and harmless on existing shells (same value overwrites). ENG-23.
+  const textWithEnv = withManagerSessionEnv(instructionText);
+
   if (existing) {
     try {
       await client.beta.sessions.events.send(existing, {
-        events: [{ type: 'user.message', content: [{ type: 'text', text: instructionText }] }],
+        events: [{ type: 'user.message', content: [{ type: 'text', text: textWithEnv }] }],
       });
       return existing;
     } catch {
@@ -101,7 +107,7 @@ async function resumeOrFireManager(prNumber: number, instructionText: string): P
         content: [
           {
             type: 'text',
-            text: `Your session id is ${session.id}. ${instructionText}`,
+            text: withManagerSessionEnv(`Your session id is ${session.id}. ${instructionText}`),
           },
         ],
       },

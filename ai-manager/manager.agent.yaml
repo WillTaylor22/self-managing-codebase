@@ -129,7 +129,9 @@ system: |
         URLs 404 anonymously and won't render in PR markdown).
 
            # BLOB_READ_WRITE_TOKEN is injected into the session env by
-           # tick.ts (scoped to the `pr-media-2` store, public access).
+           # the kickoff message (tick.ts CLI, /api/manager-tick cron,
+           # and /api/github-webhook resume — see lib/manager-session-env.ts;
+           # scoped to the `pr-media-2` store, public access).
            # If it is unset, stop and surface a "Credentials needed:
            # BLOB_READ_WRITE_TOKEN" Linear ticket — do not fall back to
            # raw.githubusercontent (the repo is private; they 404).
