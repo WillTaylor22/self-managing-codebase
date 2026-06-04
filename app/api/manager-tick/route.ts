@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { withManagerSessionEnv } from '@/lib/manager-session-env';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -46,7 +47,9 @@ export async function GET(req: Request) {
         content: [
           {
             type: 'text',
-            text: `Wake up. Your session id is ${session.id} — when you open a PR, include "session-id: ${session.id}" on its own line as the last line of the PR body so future webhooks can resume this session. Run the operational loop in your system prompt. Stop when there is nothing left.`,
+            text: withManagerSessionEnv(
+              `Wake up. Your session id is ${session.id} — when you open a PR, include "session-id: ${session.id}" on its own line as the last line of the PR body so future webhooks can resume this session. Run the operational loop in your system prompt. Stop when there is nothing left.`,
+            ),
           },
         ],
       },
