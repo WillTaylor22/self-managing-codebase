@@ -2,6 +2,8 @@
 
 A demo showcasing an app maintained by a 100% autonomous, self-learning agent.
 
+[Narrative write up here](https://www.willtay.com/autonomous)
+
 <img width="1842" height="1110" alt="image" src="https://github.com/user-attachments/assets/da888f32-5e40-474a-b9f0-f1fb116cc445" />
 
 _This same agent pushing to prod at our startup [Versey](https://www.versey.ai)._
