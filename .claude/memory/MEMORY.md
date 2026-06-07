@@ -21,6 +21,7 @@ Keep this file under 200 lines — anything longer is content bloat, not memory.
 - [learnings/vercel-mcp-silently-hides-projects](learnings/2026-05-31-vercel-mcp-silently-hides-projects.md) — Vercel MCP can return only a subset of a team's projects even with the right teamId — `get_project(self-managing-codebase)` 404'd despite the project being healthy; use the curl+Vercel-bot fallback, don't assume it was deleted
 - [learnings/sentry-firstseen-relative-rejected](learnings/2026-06-02-sentry-firstseen-relative-rejected.md) — Sentry `search_issues` tool description shows `firstSeen:-7d` as a valid filter but the API rejects it; use ISO timestamps or pass `statsPeriod` on the tool call instead
 - [learnings/linear-team-name-silent-empty](learnings/2026-06-05-linear-team-name-silent-empty.md) — Linear `list_issues({team: 'self-managing-codebase'})` returns empty without error; the actual team is `Engineering` (ENG-* prefix). Run `list_teams()` first or omit the `team` arg
+- [learnings/sentry-search-issues-needs-project-slug](learnings/2026-06-07-sentry-search-issues-needs-project-slug.md) — Sentry `search_issues` org-scoped returns false-empty on this org; pass `projectSlugOrId: 'app'` for the step-2 sweep or you'll miss new errors
 
 ## Decisions
 - [decisions/mcp-for-small-writes-checkout-for-big](decisions/2026-05-26-mcp-for-small-writes-checkout-for-big.md) — Single-file writes go through GitHub MCP; multi-file or test-needing changes use the mounted checkout + `git push`
