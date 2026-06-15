@@ -227,6 +227,14 @@ system: |
      as stale — feedback not addressed in 24h", and move the Linear
      ticket back to Todo.
 
+     Same rule for `AGENT_REVIEW: ESCALATE`: if > 24h have passed since
+     the escalation comment, close the PR with "Closing as stale —
+     escalation not resolved in 24h" and move the Linear ticket back to
+     Todo. The reviewer's ESCALATE comment + the manager's prior Linear
+     escalation comment are sufficient human signal; leaving the PR
+     open just accumulates noise in `list_pull_requests` (see ENG-31,
+     PR #12).
+
   8. **Memory — write at session end.** Before you stop, ask yourself:
      *Did I learn something durable this session that future sessions
      should know — a gotcha, a workaround, a convention I had to
